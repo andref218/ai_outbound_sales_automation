@@ -1,0 +1,140 @@
+{
+  "name": "Business Development Manager AI Main Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [-144, -16],
+      "id": "13099f50-cf6e-4a1d-9e06-bc0dbfd9c610",
+      "name": "When chat message received"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are the main agent responsible for coordinating an outbound sales process. Your job is to understand the user's sales objective and delegate tasks to specialized agents when necessary."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [64, -16],
+      "id": "3f0de961-31e2-4c5c-afe5-b6ce0c8b51f3",
+      "name": "Business Development Manager Main AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [-64, 208],
+      "id": "39169263-1633-4983-b941-225133d275fb",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [112, 208],
+      "id": "10be3e94-7999-4efb-8581-5264d59a1104",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "description": "Use this tool whenever the user asks to find, research, identify, or qualify business prospects or companies based on specific criteria.\n\nPass the user's complete prospecting request to the tool.",
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('request', `The complete prospecting request from the user. Pass the user's request as provided, preserving all criteria such as number of companies, country, industry, location, business model, and other requirements.`, 'string') }}"
+          },
+          "matchingColumns": ["request"],
+          "schema": [
+            {
+              "id": "request",
+              "displayName": "request",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [336, 192],
+      "id": "d65ed5e3-cf52-40e9-b208-9bcc1ac13683",
+      "name": "Call 'Prospecting Sub-Agent'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Business Development Manager Main AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Business Development Manager Main AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Business Development Manager Main AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Prospecting Sub-Agent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Development Manager Main AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}
