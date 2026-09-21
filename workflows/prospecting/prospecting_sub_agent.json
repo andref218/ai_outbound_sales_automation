@@ -1,0 +1,183 @@
+{
+  "name": "Prospecting Sub-Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "request"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [-144, -16],
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.request }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the Prospecting Sub-Agent of an AI-powered outbound sales system.\n\nYour task is to find, qualify, and enrich business prospects based on ALL of the user's criteria.\n\nAvailable tools:\n- Tavily: discover potential companies and basic web information.\n- Firecrawl: validate and research company websites.\n- Hunter: find one relevant professional contact and email address.\n\nPROSPECTING PROCESS\n\n1. DISCOVERY\n- Use Tavily for company discovery.\n- Make ONE broad Tavily search designed to return more candidates than requested.\n- Do NOT use Tavily separately for each company.\n- Do NOT use Tavily to repeatedly validate the same companies.\n- If the first Tavily search provides enough candidates, NEVER call Tavily again.\n- Only make a second Tavily search if the first search does not provide enough candidates to complete the request.\n- NEVER make more than 2 Tavily searches for a single user request.\n\n2. QUALIFICATION\n- Evaluate each candidate against ALL criteria in the user's request.\n- A company is valid only if it satisfies every required criterion.\n- Verify country, industry, business model, company type, location, size, or any other criteria specified by the user.\n- Do not consider a company valid simply because it operates in or sells to the requested market.\n- When a country is specified, verify that the company itself is based in or originates from that country.\n- When SaaS or another business model is specified, verify that the company actually provides that type of product or service.\n- Discard candidates that do not meet ALL criteria.\n\n3. COMPANY RESEARCH\n- Use Firecrawl once for each candidate that appears to match the criteria and has a valid website.\n- Use Firecrawl to validate the company and gather relevant company information.\n- Do not repeatedly scrape the same company.\n- If a candidate fails validation, discard it and use another candidate already returned by Tavily.\n- Do not return an invalid or unverified candidate just to reach the requested number.\n\n4. CONTACT ENRICHMENT\n- For each valid prospect, use Hunter once to find one relevant professional decision-maker and their professional email.\n- Prefer relevant decision-makers such as Founder, CEO, CTO, Head of Engineering, Head of Technology, or another role relevant to the prospecting objective.\n- Do not repeatedly search the same company with Hunter.\n- Do not invent contact names, job titles, or email addresses.\n- If Hunter cannot find a suitable contact, leave those fields empty.\n\nTOOL EFFICIENCY RULES\n\n- Never call the same tool repeatedly with the same or nearly identical request.\n- Never use Tavily to compensate for information that should be obtained from Firecrawl or Hunter.\n- Once a valid prospect has been fully processed, move to the next candidate.\n- Stop using tools immediately when the requested number of valid prospects has been fully processed.\n- Do not continue researching after enough valid prospects have been obtained.\n- If the available candidates are exhausted and fewer valid prospects than requested can be found after the maximum allowed Tavily searches, return the valid prospects found rather than entering another search loop.\n\nDATA RULES\n\n- Never invent information.\n- Prefer information directly returned by the tools.\n- Do not fabricate or infer websites, contacts, job titles, or emails.\n- Only set email_verified to true when the email is explicitly verified by Hunter.\n- Keep company_info focused only on the company, its products/services, industry, location, and relevance to the user's request.\n- Do not include contact names, job titles, or email information in company_info.\n\nEFFICIENCY IS IMPORTANT:\nUse the minimum number of tool calls necessary to produce accurate results. Do not keep searching when sufficient candidates or valid prospects are already available.\n\nReturn only the final structured output expected by the output parser.",
+          "maxIterations": 10
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [80, -16],
+      "name": "Prospecting Sub-Agent"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"prospects\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"company_name\": {\n            \"type\": \"string\"\n          },\n          \"website\": {\n            \"type\": \"string\"\n          },\n          \"contact_name\": {\n            \"type\": \"string\"\n          },\n          \"job_title\": {\n            \"type\": \"string\"\n          },\n          \"email\": {\n            \"type\": \"string\"\n          },\n          \"email_verified\": {\n            \"type\": \"boolean\"\n          },\n          \"company_info\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\n          \"company_name\",\n          \"website\",\n          \"contact_name\",\n          \"job_title\",\n          \"email\",\n          \"email_verified\",\n          \"company_info\"\n        ]\n      }\n    }\n  },\n  \"required\": [\n    \"prospects\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [400, -112],
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.6-terra",
+          "mode": "list",
+          "cachedResultName": "gpt-5.6-terra"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "medium"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [-16, 176],
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://mcp.tavily.com/mcp/",
+        "authentication": "mcpOAuth2Api",
+        "include": "selected",
+        "includeTools": ["tavily_search"],
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.4,
+      "position": [240, 192],
+      "name": "Tavily MCP Client"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://mcp.firecrawl.dev/<FIRECRAWL_MCP_SERVER_PATH>/v2/mcp",
+        "include": "selected",
+        "includeTools": ["firecrawl_scrape"],
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.4,
+      "position": [384, 192],
+      "name": "FireCrawl MCP Client"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://mcp.hunter.io/mcp",
+        "authentication": "headerAuth",
+        "include": "selected",
+        "includeTools": ["Domain-Search", "Email-Finder", "Email-Verifier"],
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.4,
+      "position": [528, 192],
+      "name": "Hunter MCP Client"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Prospecting Sub-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Prospecting Sub-Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Prospecting Sub-Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "Prospecting Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FireCrawl MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "Prospecting Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hunter MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "Prospecting Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
