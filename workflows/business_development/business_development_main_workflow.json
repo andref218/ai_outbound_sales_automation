@@ -8,19 +8,20 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [-144, -16],
-      "id": "13099f50-cf6e-4a1d-9e06-bc0dbfd9c610",
+      "id": "3f3b09bd-91f4-44e9-bd6d-a924eb01a7e3",
       "name": "When chat message received"
     },
     {
       "parameters": {
         "options": {
-          "systemMessage": "You are the main agent responsible for coordinating an outbound sales process. Your job is to understand the user's sales objective and delegate tasks to specialized agents when necessary."
+          "systemMessage": "You are the Business Development Manager of an AI-powered outbound sales system.\n\nYour role is to understand the user's sales objective and coordinate specialized agents to complete the task.\n\nAVAILABLE AGENTS\n\n1. Prospecting Sub-Agent\nUse this agent when the user asks to find, discover, research, or identify business prospects or companies based on specific criteria.\n\nPass the user's complete request to the Prospecting Sub-Agent, preserving all criteria.\n\n2. Qualification Sub-Agent\nUse this agent to evaluate the prospects returned by the Prospecting Sub-Agent.\n\nPass:\n- request: the original user request\n- prospects: the complete result returned by the Prospecting Sub-Agent\n\nWORKFLOW\n\nFor prospecting requests, follow this sequence strictly:\n\n1. Call the Prospecting Sub-Agent.\n2. Wait for its result.\n3. ALWAYS call the Qualification Sub-Agent exactly once.\n4. Pass the original user request as \"request\".\n5. Pass the complete Prospecting result as \"prospects\".\n6. Wait for the Qualification result.\n7. Only then produce the final response.\n\nIMPORTANT\n\n- Never skip the Qualification Sub-Agent.\n- Never produce the final response immediately after Prospecting.\n- Always qualify the returned prospects, even if they are incomplete or do not match the criteria.\n- Do not perform prospecting yourself when the Prospecting Sub-Agent is available.\n- Do not make unnecessary or repeated tool calls.\n- Do not invent, modify, or fabricate prospect information.\n- Preserve the user's original criteria throughout the process.\n- If information is missing, preserve it as missing.\n- Keep the final response concise.\n\nYour job is to coordinate the agents, not to perform their specialized tasks yourself.",
+          "maxIterations": 4
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [64, -16],
-      "id": "3f0de961-31e2-4c5c-afe5-b6ce0c8b51f3",
+      "id": "f917d9dc-c675-482e-8026-e0b4d0a9b1a2",
       "name": "Business Development Manager Main AI Agent"
     },
     {
@@ -31,12 +32,14 @@
           "value": "gpt-5-mini"
         },
         "builtInTools": {},
-        "options": {}
+        "options": {
+          "reasoningEffort": "low"
+        }
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [-64, 208],
-      "id": "39169263-1633-4983-b941-225133d275fb",
+      "id": "45af1e68-a953-4a3e-898e-feee55a77958",
       "name": "OpenAI Chat Model"
     },
     {
@@ -44,12 +47,12 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
       "position": [112, 208],
-      "id": "10be3e94-7999-4efb-8581-5264d59a1104",
+      "id": "998598a2-b289-4476-8f60-49f7274cbe16",
       "name": "Simple Memory"
     },
     {
       "parameters": {
-        "description": "Use this tool whenever the user asks to find, research, identify, or qualify business prospects or companies based on specific criteria.\n\nPass the user's complete prospecting request to the tool.",
+        "description": "MANDATORY second step after the Prospecting Sub-Agent.\n\nAlways call this tool once after receiving prospecting results.\n\nPass:\n- request: the original user request\n- prospects: the complete result returned by the Prospecting Sub-Agent\n\nDo not skip this step, even when prospects are incomplete or do not match the criteria.",
         "workflowId": {
           "__rl": true,
           "value": "",
@@ -58,7 +61,54 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "request": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('request', `The complete prospecting request from the user. Pass the user's request as provided, preserving all criteria such as number of companies, country, industry, location, business model, and other requirements.`, 'string') }}"
+            "prospects": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('prospects', `The complete list of prospects returned by the Prospecting Sub-Agent. Pass the data exactly as returned.`, 'string') }}",
+            "request": "={{ $json.chatInput }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "prospects",
+              "displayName": "prospects",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "request",
+              "displayName": "request",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [544, 192],
+      "id": "02c0fb31-b57e-4b75-90a8-8e57fd857731",
+      "name": "Call 'Qualification Sub-Agent'"
+    },
+    {
+      "parameters": {
+        "description": "Use this tool to return a test list of prospects for the outbound sales process.\n\nPass the user's original prospecting request to the workflow.",
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "request": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('request', `The original prospecting request from the user, including all criteria.`, 'string') }}"
           },
           "matchingColumns": ["request"],
           "schema": [
@@ -79,8 +129,8 @@
       },
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
-      "position": [336, 192],
-      "id": "d65ed5e3-cf52-40e9-b208-9bcc1ac13683",
+      "position": [384, 192],
+      "id": "26db6019-33e5-4e5f-8399-b98babbf9564",
       "name": "Call 'Prospecting Sub-Agent'"
     }
   ],
@@ -119,6 +169,17 @@
         ]
       ]
     },
+    "Call 'Qualification Sub-Agent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Development Manager Main AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Call 'Prospecting Sub-Agent'": {
       "ai_tool": [
         [
@@ -136,5 +197,6 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
+  "nodeGroups": [],
   "tags": []
 }
