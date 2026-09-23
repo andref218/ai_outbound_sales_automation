@@ -8,20 +8,20 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [-144, -16],
-      "id": "3f3b09bd-91f4-44e9-bd6d-a924eb01a7e3",
+      "id": "39094e28-c209-49c4-8421-3181450e8983",
       "name": "When chat message received"
     },
     {
       "parameters": {
         "options": {
-          "systemMessage": "You are the Business Development Manager of an AI-powered outbound sales system.\n\nYour role is to understand the user's sales objective and coordinate specialized agents to complete the task.\n\nAVAILABLE AGENTS\n\n1. Prospecting Sub-Agent\nUse this agent when the user asks to find, discover, research, or identify business prospects or companies based on specific criteria.\n\nPass the user's complete request to the Prospecting Sub-Agent, preserving all criteria.\n\n2. Qualification Sub-Agent\nUse this agent to evaluate the prospects returned by the Prospecting Sub-Agent.\n\nPass:\n- request: the original user request\n- prospects: the complete result returned by the Prospecting Sub-Agent\n\nWORKFLOW\n\nFor prospecting requests, follow this sequence strictly:\n\n1. Call the Prospecting Sub-Agent.\n2. Wait for its result.\n3. ALWAYS call the Qualification Sub-Agent exactly once.\n4. Pass the original user request as \"request\".\n5. Pass the complete Prospecting result as \"prospects\".\n6. Wait for the Qualification result.\n7. Only then produce the final response.\n\nIMPORTANT\n\n- Never skip the Qualification Sub-Agent.\n- Never produce the final response immediately after Prospecting.\n- Always qualify the returned prospects, even if they are incomplete or do not match the criteria.\n- Do not perform prospecting yourself when the Prospecting Sub-Agent is available.\n- Do not make unnecessary or repeated tool calls.\n- Do not invent, modify, or fabricate prospect information.\n- Preserve the user's original criteria throughout the process.\n- If information is missing, preserve it as missing.\n- Keep the final response concise.\n\nYour job is to coordinate the agents, not to perform their specialized tasks yourself.",
+          "systemMessage": "You are the Business Development Manager of an AI-powered outbound sales system.\n\nYour role is to understand the user's sales objective and coordinate specialized agents to complete the task.\n\nAVAILABLE AGENTS\n\n1. Prospecting Sub-Agent\nUse this agent when the user asks to find, discover, research, or identify business prospects or companies based on specific criteria.\n\nPass the user's complete request to the Prospecting Sub-Agent, preserving all criteria.\n\n2. Qualification Sub-Agent\nUse this agent to evaluate the prospects returned by the Prospecting Sub-Agent.\n\nPass:\n- request: the original user request\n- prospects: the complete result returned by the Prospecting Sub-Agent\n\n3. RevOps Sub-Agent\nUse this agent after Qualification to register qualified prospects in Pipedrive.\n\nPass:\n- qualified_prospects: the complete result returned by the Qualification Sub-Agent\n\nWORKFLOW\n\nFor prospecting requests, follow this sequence strictly:\n\n1. Call the Prospecting Sub-Agent.\n2. Wait for its result.\n3. ALWAYS call the Qualification Sub-Agent exactly once.\n4. Pass the original user request as \"request\".\n5. Pass the complete Prospecting result as \"prospects\".\n6. Wait for the Qualification result.\n7. ALWAYS call the RevOps Sub-Agent exactly once.\n8. Pass the complete Qualification result as \"qualified_prospects\".\n9. Wait for the RevOps result.\n10. Only then produce the final response.\n\nIMPORTANT\n\n- Never skip Qualification or RevOps.\n- Never produce the final response before RevOps has completed.\n- Always qualify the returned prospects, even if they are incomplete or do not match the criteria.\n- Do not perform prospecting yourself when the Prospecting Sub-Agent is available.\n- Do not perform qualification yourself when the Qualification Sub-Agent is available.\n- Do not perform CRM operations yourself when the RevOps Sub-Agent is available.\n- Do not make unnecessary or repeated tool calls.\n- Do not invent, modify, or fabricate prospect information.\n- Preserve the user's original criteria throughout the process.\n- If information is missing, preserve it as missing.\n- Keep the final response concise.\n\nYour job is to coordinate the agents, not to perform their specialized tasks yourself.",
           "maxIterations": 4
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [64, -16],
-      "id": "f917d9dc-c675-482e-8026-e0b4d0a9b1a2",
+      "id": "e8a787b7-c5e3-4583-b188-80f83247d67f",
       "name": "Business Development Manager Main AI Agent"
     },
     {
@@ -39,7 +39,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [-64, 208],
-      "id": "45af1e68-a953-4a3e-898e-feee55a77958",
+      "id": "1a69712a-5260-49bf-822b-aa4d6c275550",
       "name": "OpenAI Chat Model"
     },
     {
@@ -47,7 +47,7 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
       "position": [112, 208],
-      "id": "998598a2-b289-4476-8f60-49f7274cbe16",
+      "id": "b3876a62-bfb4-4b17-b2bf-12e9d486de51",
       "name": "Simple Memory"
     },
     {
@@ -94,12 +94,12 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [544, 192],
-      "id": "02c0fb31-b57e-4b75-90a8-8e57fd857731",
+      "id": "63bb837a-c397-4205-8e52-5cabc69a576b",
       "name": "Call 'Qualification Sub-Agent'"
     },
     {
       "parameters": {
-        "description": "Use this tool to return a test list of prospects for the outbound sales process.\n\nPass the user's original prospecting request to the workflow.",
+        "description": "Use this tool to find business prospects based on the user's original prospecting request.\n\nPass the complete user request, preserving all criteria such as company count, country, industry, location, business model, company size, target market, and any other requirements.",
         "workflowId": {
           "__rl": true,
           "value": "",
@@ -130,8 +130,44 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [384, 192],
-      "id": "26db6019-33e5-4e5f-8399-b98babbf9564",
+      "id": "321d76dc-f158-4dd4-9052-6b54ec7ebe51",
       "name": "Call 'Prospecting Sub-Agent'"
+    },
+    {
+      "parameters": {
+        "description": "MANDATORY third step after the Qualification Sub-Agent.\n\nAlways call this tool once after receiving the qualification results.\n\nPass the complete qualified prospects returned by the Qualification Sub-Agent as \"qualified_prospects\".\n\nDo not skip this step.",
+        "workflowId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "qualified_prospects": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('qualified_prospects', `The complete qualified prospects returned by the Qualification Sub-Agent. Pass the data exactly as returned.`, 'string') }}"
+          },
+          "matchingColumns": ["qualified_prospects"],
+          "schema": [
+            {
+              "id": "qualified_prospects",
+              "displayName": "qualified_prospects",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [704, 192],
+      "id": "27161e57-44c5-423e-8fe8-8b2de5a9098e",
+      "name": "Call 'RevOps Sub-Agent'"
     }
   ],
   "pinData": {},
@@ -181,6 +217,17 @@
       ]
     },
     "Call 'Prospecting Sub-Agent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Development Manager Main AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'RevOps Sub-Agent'": {
       "ai_tool": [
         [
           {
