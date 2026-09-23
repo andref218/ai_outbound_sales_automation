@@ -1,0 +1,446 @@
+{
+  "name": "Deal Recording Sub-Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Search Pipedrive for the person who sent the incoming email.\n\nUse the sender's email address to identify the contact.\nPrefer an exact match.\nDo not guess or use unrelated contact information.",
+        "resource": "person",
+        "operation": "search",
+        "term": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Term', ``, 'string') }}",
+        "exactMatch": true,
+        "limit": 1,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.pipedriveTool",
+      "typeVersion": 2,
+      "position": [1136, 176],
+      "id": "585eb9ef-1a7d-4552-9a4c-dcb7c446e317",
+      "name": "Search persons in Pipedrive"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"interested\": false,\n  \"person_id\": null,\n  \"lead_id\": null,\n  \"organization_id\": null,\n  \"existing_deal\": null,\n  \"company_name\": \"\",\n  \"contact_name\": \"\",\n  \"reason\": \"\",\n  \"status\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [1200, -144],
+      "id": "369030e6-80a3-40f3-b2cc-09adb733eac2",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.6-luna",
+          "mode": "list",
+          "cachedResultName": "gpt-5.6-luna"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [768, 208],
+      "id": "9878baf5-545a-4fce-a037-4d73060336c6",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "title": "={{ $json.output.company_name + \" - Outbound Opportunity\" }}",
+        "org_id": "={{ $json.output.organization_id }}",
+        "additionalFields": {
+          "person_id": "={{ $json.output.person_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 2,
+      "position": [1632, -208],
+      "id": "3d91a8b9-732a-41c7-b0f9-0256af886867",
+      "name": "Create a deal"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Retrieve the Pipedrive lead associated with a person.\n\nUse the person ID returned by the Search Persons in Pipedrive tool to identify the corresponding lead.\n\nDo not guess the lead ID.\nOnly retrieve the lead associated with the identified person.",
+        "resource": "lead",
+        "operation": "getAll",
+        "limit": 1,
+        "filters": {
+          "person_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Person_ID', `The person ID returned by the Search Persons in Pipedrive tool for the sender of the incoming email.`, 'number') }}"
+        }
+      },
+      "type": "n8n-nodes-base.pipedriveTool",
+      "typeVersion": 2,
+      "position": [1296, 176],
+      "id": "e99dbea7-4521-429b-9381-e13edbb49ec5",
+      "name": "Get many leads in Pipedrive"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "MANDATORY final CRM lookup for an interested prospect.\n\nUse this tool after a matching person and lead have been identified.\n\nSearch for an existing deal using the exact company name associated with the prospect.\n\nThis tool MUST be called before the AI Agent returns its final result whenever the prospect is interested and a lead was found.\n\nDo not create or modify deals.\n\nUse the exact company name provided by the AI Agent.\nUse this tool only to check whether a deal already exists.\nDo not create or modify deals.",
+        "operation": "search",
+        "term": "={{ $fromAI('Deal_Title', 'Build the exact title using the company name in this format: [company_name] - Outbound Opportunity', 'string') }}",
+        "limit": 1,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.pipedriveTool",
+      "typeVersion": 2,
+      "position": [1440, 176],
+      "id": "4957029e-4d8e-4ded-ae4f-c178747be0ce",
+      "name": "Search deals in Pipedrive"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Incoming email:\n\nSender name: {{ $json.sender_name }}\nSender email: {{ $json.sender_email }}\nSubject: {{ $json.subject }}\nMessage: {{ $json.message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the Deal Recording Sub-Agent of an AI-powered outbound sales system.\n\nYour task is to analyze incoming email replies from prospects and determine whether the prospect has expressed genuine commercial interest. If there is interest, identify the corresponding records in Pipedrive and determine whether an existing deal already exists.\n\nPROCESS\n\n1. Analyze the incoming email.\n2. Determine whether the prospect has expressed clear commercial interest.\n\n3. If the prospect is not clearly interested:\n   - Return interested = false.\n   - Do not use Pipedrive tools.\n   - Return the structured output.\n\n4. If the prospect is clearly interested:\n   - MUST search Pipedrive for the person using the sender's email address.\n   - If a matching person is found, MUST use the returned person ID to search Pipedrive for the person's lead.\n   - If a matching lead is found:\n     - Preserve the person ID.\n     - Preserve the lead ID.\n     - Identify the associated organization from the Pipedrive data.\n     - Preserve the organization ID when available.\n     - Preserve the company name when available.\n     - MUST search Pipedrive for an existing deal using the associated company name.\n   - Do not stop after finding the person.\n   - Do not stop after finding the lead.\n   - The CRM lookup is complete only after the existing-deal search has been performed.\n   - Only then return the structured output.\n\nINTEREST RULES\n\nSet interested = true only when the prospect clearly expresses commercial interest or a concrete intention to move forward.\n\nExamples that indicate clear commercial interest:\n- \"Yes, I'm interested.\"\n- \"This sounds interesting. I'd like to discuss it.\"\n- \"I'd be interested in a demo.\"\n- \"Can we schedule a call?\"\n- \"I'd like to speak with someone about this.\"\n- \"Please send me a proposal.\"\n- \"I'd like to move forward.\"\n- \"I'm interested. Can your solution automate candidate screening?\"\n\nDo not mark interested = true based only on a question or request for information.\n\nThe following alone do NOT indicate sufficient commercial interest:\n- Asking how the product works.\n- Asking whether a specific feature is supported.\n- Asking about pricing.\n- Asking about integrations.\n- Asking for more information.\n- Asking whether the solution can solve a particular problem.\n- General curiosity about the product.\n\nExamples:\n- \"Can your solution also automate candidate screening workflows?\" → interested = false\n- \"How does your pricing work?\" → interested = false\n- \"Do you integrate with Workday?\" → interested = false\n- \"Can you tell me more about the product?\" → interested = false\n\nIf a message contains both a question and an explicit statement of interest, set interested = true.\n\nExamples:\n- \"I'm interested. Can your solution automate candidate screening?\" → interested = true\n- \"This sounds interesting. Can you send me more information?\" → interested = true\n\nTreat the following as not interested:\n- Clear rejection.\n- Unsubscribe requests.\n- Requests to stop contacting them.\n- Automatic replies.\n- Out-of-office messages.\n- Generic acknowledgements without commercial interest.\n\nPIPEDRIVE RULES\n\n- Always use the sender email address when searching for the person.\n- Prefer exact email matches.\n- Do not search for a person using unrelated or guessed information.\n- Only use IDs returned by Pipedrive tools.\n- Never invent person IDs, lead IDs, organization IDs, or deal IDs.\n- Preserve the organization ID and company name returned by Pipedrive whenever available.\n\nPERSON LOOKUP\n\n- If the person cannot be found:\n  - Set person_id = null.\n  - Set lead_id = null.\n  - Set organization_id = null.\n  - Set existing_deal = null.\n  - Set company_name = \"\".\n  - Explain in status that the person was not found.\n  - Do not continue with lead or deal lookup.\n\nLEAD LOOKUP\n\n- If the person is found but no lead is found:\n  - Preserve the person_id.\n  - Set lead_id = null.\n  - Set organization_id = null.\n  - Set existing_deal = null.\n  - Preserve company_name only when it is actually available.\n  - Explain in status that the lead was not found.\n  - Do not perform the deal search.\n\nORGANIZATION LOOKUP\n\n- If the lead is found, identify the organization associated with the lead or person.\n- Preserve the actual organization ID returned by Pipedrive.\n- Preserve the actual company name returned by Pipedrive.\n- Never invent or infer organization information.\n\nDEAL LOOKUP\n\n- If the lead is found, always perform the existing-deal search before returning the result.\n- Use the associated company name from Pipedrive for the deal search.\n- Never assume that a deal does not exist.\n- Only set existing_deal = null after the deal search has actually been performed and no matching deal was found.\n- If a deal is found, preserve its actual ID.\n- Do not create or modify deals yourself.\n\nDUPLICATE PROTECTION\n\n- Never create a deal if an existing deal was found.\n- Never assume an existing deal does not exist without performing the deal search.\n- The Create Deal node outside this agent is responsible for creating the deal.\n- This agent only analyzes the reply and performs CRM lookups.\n\nOTHER RULES\n\n- Do not perform prospecting, qualification, or email outreach.\n- Do not invent or modify any data.\n- Use null for IDs that could not be found.\n- Keep reason concise and factual.\n- Use status to clearly describe the CRM lookup result.\n- Return only the structured output."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [912, 0],
+      "id": "2c975c1a-6012-4fcf-a36b-b4d22a3cccfc",
+      "name": "Deal Recording Sub-Agent"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [-144, 0],
+      "id": "32989be5-b32d-4360-9a88-cc7576243ff6",
+      "name": "Incoming Email Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [32, 0],
+      "id": "1e79d464-6a07-43d6-adb6-17c3bf1c7768",
+      "name": "Get Email Content"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"sender_email\": \"{{ $('Get Email Content').item.json.From.match(/<([^>]+)>/)?.[1] || $('Get Email Content').item.json.From }}\",\n  \"sender_name\": \"{{ $('Get Email Content').item.json.From.match(/^\\\"?([^\\\"<]+)\\\"?\\\\s*</)?.[1]?.trim() || $('Get Email Content').item.json.From.split('<')[0].replace(/\\\"/g, '').trim() }}\",\n  \"subject\": \"{{ $('Get Email Content').item.json.Subject }}\",\n  \"message\": \"{{ $('Get Email Content').item.json.snippet }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [752, 0],
+      "id": "28dac952-f4ea-40ec-9bd5-540d7cb98d1c",
+      "name": "Normalize Email Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1b342474-7d76-48f9-bbce-3fc278a7f9f2",
+              "leftValue": "={{ \n  $json.output.interested === true &&\n  $json.output.person_id != null &&\n  $json.output.lead_id != null &&\n  $json.output.existing_deal == null\n}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1408, -112],
+      "id": "49b00f98-5565-4b2b-8cb4-829e50cf22c4",
+      "name": "If - Create a Deal ?"
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "get",
+        "threadId": "={{ $json.threadId }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [192, 0],
+      "id": "cfef39a9-42f4-4e45-be2d-6b28aed98652",
+      "name": "Get a thread"
+    },
+    {
+      "parameters": {
+        "resource": "person",
+        "operation": "search",
+        "term": "={{ \n  $('Get Email Content').item.json.From.match(/<([^>]+)>/)?.[1]\n  || $('Get Email Content').item.json.From\n}}",
+        "exactMatch": true,
+        "limit": 1,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.pipedrive",
+      "typeVersion": 2,
+      "position": [272, 224],
+      "id": "d3e17ab6-bd02-47b1-a252-356a0ded2e38",
+      "name": "Find Contact in Pipedrive",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "40eaffa3-be59-4a68-b94a-0004f2d59562",
+              "leftValue": "={{ $json.messages.some(message =>\n  message.From?.toLowerCase().includes('YOUR_OUTBOUND_EMAIL@example.com')\n) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [368, 0],
+      "id": "c3d256e3-14ee-4450-bc4f-fec872374fec",
+      "name": "If - Is Outbound Thread?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c69b75e6-9ce9-49e1-9ad1-856b1a0f01b7",
+              "leftValue": "={{ $json.id != null }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [480, 224],
+      "id": "86a16f4a-5843-42c0-b594-b0d9f7dcc8c5",
+      "name": "If - Is Known Contact?"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Search persons in Pipedrive": {
+      "ai_tool": [
+        [
+          {
+            "node": "Deal Recording Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Deal Recording Sub-Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Deal Recording Sub-Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many leads in Pipedrive": {
+      "ai_tool": [
+        [
+          {
+            "node": "Deal Recording Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search deals in Pipedrive": {
+      "ai_tool": [
+        [
+          {
+            "node": "Deal Recording Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deal Recording Sub-Agent": {
+      "main": [
+        [
+          {
+            "node": "If - Create a Deal ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Incoming Email Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Email Content": {
+      "main": [
+        [
+          {
+            "node": "Get a thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Email Data": {
+      "main": [
+        [
+          {
+            "node": "Deal Recording Sub-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Create a Deal ?": {
+      "main": [
+        [
+          {
+            "node": "Create a deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a thread": {
+      "main": [
+        [
+          {
+            "node": "If - Is Outbound Thread?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Contact in Pipedrive": {
+      "main": [
+        [
+          {
+            "node": "If - Is Known Contact?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Is Outbound Thread?": {
+      "main": [
+        [
+          {
+            "node": "Normalize Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find Contact in Pipedrive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Is Known Contact?": {
+      "main": [
+        [
+          {
+            "node": "Normalize Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
