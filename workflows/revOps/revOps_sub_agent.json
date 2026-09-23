@@ -14,7 +14,7 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.2,
       "position": [0, 400],
-      "id": "22ec8189-6e63-423b-832f-fdd21ed5b94c",
+      "id": "bb873385-4894-4e46-855b-79d3983b02fb",
       "name": "When Executed by Another Workflow"
     },
     {
@@ -32,7 +32,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [112, 576],
-      "id": "3508fd7f-5a29-4821-9f6d-26bdbbcc2848",
+      "id": "b49e7403-5ed9-4cc8-9512-92abab19cf53",
       "name": "OpenAI Chat Model"
     },
     {
@@ -43,7 +43,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [544, 256],
-      "id": "d33ea453-54a2-4934-9d2b-44adf1f9fd8f",
+      "id": "695d81fa-695a-404d-87cf-cf38a4231442",
       "name": "Structured Output Parser"
     },
     {
@@ -60,7 +60,7 @@
       "type": "n8n-nodes-base.pipedriveTool",
       "typeVersion": 2,
       "position": [448, 560],
-      "id": "bbab353a-c0a0-4719-bea9-47359beddec9",
+      "id": "121fdaec-edfe-4024-8fbc-d8255330452c",
       "name": "Search organizations in Pipedrive"
     },
     {
@@ -74,7 +74,7 @@
       "type": "n8n-nodes-base.pipedriveTool",
       "typeVersion": 2,
       "position": [624, 560],
-      "id": "41724f1d-2e07-4595-9ba4-ccf9a918b07a",
+      "id": "fc8eedbb-3a33-4aab-93b8-e6d4c6c41f80",
       "name": "Create an organization in Pipedrive"
     },
     {
@@ -90,8 +90,8 @@
       },
       "type": "n8n-nodes-base.pipedriveTool",
       "typeVersion": 2,
-      "position": [624, 720],
-      "id": "7ef7946c-74f8-4dba-8f5f-e800afd4439b",
+      "position": [784, 560],
+      "id": "759e8cf9-83e6-4ca0-b466-c7f9caf03c38",
       "name": "Search persons in Pipedrive"
     },
     {
@@ -112,8 +112,8 @@
       },
       "type": "n8n-nodes-base.pipedriveTool",
       "typeVersion": 2,
-      "position": [448, 720],
-      "id": "63e96627-afa4-48ca-8538-8241e2ee5d0d",
+      "position": [944, 560],
+      "id": "26e1e299-43b7-4da5-b470-9e1aef095871",
       "name": "Create a person in Pipedrive"
     },
     {
@@ -129,8 +129,8 @@
       },
       "type": "n8n-nodes-base.pipedriveTool",
       "typeVersion": 2,
-      "position": [800, 560],
-      "id": "f84e04de-af4a-4bfc-88d6-56b441600c2e",
+      "position": [1264, 560],
+      "id": "0e445354-7627-4530-b68f-0ecd6dbccc60",
       "name": "Create a lead in Pipedrive"
     },
     {
@@ -139,15 +139,32 @@
         "text": "=Qualified prospects:\n{{ $json.qualified_prospects }}",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "You are the RevOps Sub-Agent of an AI-powered outbound sales system.\n\nYour task is to register qualified prospects in Pipedrive.\n\nYou will receive a list of qualified prospects from the Qualification Sub-Agent.\n\nPROCESS\n\nFor each qualified prospect:\n\n1. Search Pipedrive for the organization using the exact company name.\n2. If the organization does not exist, create it.\n3. Search Pipedrive for the person using their email address.\n4. If the person does not exist, create them.\n5. Create a Lead associated with the organization and person.\n\nRULES\n\n- Only process prospects provided in the input.\n- Do not invent or modify prospect data.\n- Do not create duplicate organizations or people when an existing record is found.\n- Use the IDs returned by Pipedrive when associating records.\n- Only create a Lead for prospects that were successfully processed.\n- Preserve the original company and contact information.\n- If required information is missing, do not invent it.\n- Use Pipedrive tools for all CRM operations.\n- Do not perform prospecting or qualification yourself.\n\nReturn only the structured output.",
+          "systemMessage": "You are the RevOps Sub-Agent of an AI-powered outbound sales system.\n\nYour task is to register qualified prospects in Pipedrive.\n\nYou will receive a list of qualified prospects from the Qualification Sub-Agent.\n\nPROCESS\n\nFor each qualified prospect:\n\n1. Search Pipedrive for the organization using the exact company name.\n2. If the organization does not exist, create it.\n3. Search Pipedrive for the person using their email address.\n4. If the person does not exist, create them.\n5. Search Pipedrive for an existing lead using the person's ID.\n6. If a lead already exists, do not create another lead.\n7. If no lead exists, create a new lead associated with the organization and person.\n\nRULES\n\n- Only process prospects provided in the input.\n- Do not invent or modify prospect data.\n- Do not create duplicate organizations or people when an existing record is found.\n- Never create a duplicate lead for the same person.\n- Reuse existing organizations, people, and leads whenever they are found.\n- Use the IDs returned by Pipedrive when associating records.\n- Only create a lead for prospects that do not already have one.\n- Only create a lead when the required organization and person have been successfully identified or created.\n- Preserve the original company and contact information.\n- If required information is missing, do not invent it.\n- Use Pipedrive tools for all CRM operations.\n- Do not perform prospecting or qualification yourself.\n\nReturn only the structured output.",
           "maxIterations": 20
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [192, 400],
-      "id": "1e26763c-8a14-4d75-92cb-a1fa45d68264",
+      "id": "369664a0-9f96-4a1a-9e3d-2dbf5969c063",
       "name": "RevOps Sub-Agent"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Search Pipedrive for an existing lead using the person's ID before creating a new lead. Use this tool to prevent duplicate leads for the same contact.",
+        "resource": "lead",
+        "operation": "getAll",
+        "limit": 1,
+        "filters": {
+          "person_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Person_ID', `The person ID of the prospect. Use the person_id returned by the Search Person step to check whether an existing lead already exists for this contact.`, 'number') }}"
+        }
+      },
+      "type": "n8n-nodes-base.pipedriveTool",
+      "typeVersion": 2,
+      "position": [1104, 560],
+      "id": "09ea77f6-13fb-417a-b508-69a755edc35c",
+      "name": "Get many leads in Pipedrive"
     }
   ],
   "pinData": {},
@@ -230,6 +247,17 @@
       ]
     },
     "Create a lead in Pipedrive": {
+      "ai_tool": [
+        [
+          {
+            "node": "RevOps Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many leads in Pipedrive": {
       "ai_tool": [
         [
           {
