@@ -1,0 +1,195 @@
+{
+  "name": "Email Outreach Sub-Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "crm_records"
+            },
+            {
+              "name": "request"
+            },
+            {
+              "name": "sales_context"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [-144, 0],
+      "id": "382d4206-af97-4bf7-9c86-820a532294e8",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=CRM records:\n{{ $json.crm_records }}\n\nOriginal request:\n{{ $json.request }}\n\nSales context:\n{{ $json.sales_context }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the Email Outreach Agent of an AI-powered outbound sales system.\n\nYour task is to create personalized email drafts for qualified prospects using the CRM data and sales context provided.\n\nINPUT\n\n- crm_records: qualified prospect and contact data.\n- request: the original prospecting request.\n- sales_context: what is being offered, including the product, service, value proposition, or campaign objective.\n\nPROCESS\n\n1. Review the CRM records.\n2. Use Pipedrive to retrieve relevant lead and contact information when needed.\n3. Create one personalized Gmail draft for each valid prospect.\n4. Never send emails.\n\nRULES\n\n- Use only information provided by the workflow or retrieved from Pipedrive.\n- Use the contact's name, job title, company, and relevant company information when available.\n- Personalize each email using specific, relevant information about the company.\n- Explain briefly why the offering may be relevant to that specific company.\n- Use sales_context to explain the offering and campaign objective.\n- Never invent products, services, features, achievements, results, customers, pricing, or personal details.\n- Do not make unsupported claims.\n- Do not infer company-specific facts that are not provided.\n- Keep emails concise, professional, natural, and personalized.\n- Do not create a draft without a valid email address.\n- Create drafts only; never send emails.\n- Do not perform prospecting, qualification, or CRM creation yourself.\n- Do not create duplicate drafts for the same prospect during one execution.\n\nMISSING INFORMATION\n\nIf sales_context is missing or insufficient to write an accurate email, do not invent the missing information. Do not create the draft until the required sales context is provided.\n\nIf relevant company-specific information is missing, do not invent it. Use only the information available.\n\nReturn only the structured output."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [80, 0],
+      "id": "f1af440a-17f3-4e0e-ae0a-d8c6b3ebfa7f",
+      "name": "Email Outreach Sub-Agent"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"outreach_results\": [\n    {\n      \"company_name\": \"\",\n      \"contact_name\": \"\",\n      \"email\": \"\",\n      \"subject\": \"\",\n      \"status\": \"draft_created\",\n      \"message\": \"\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [352, -144],
+      "id": "606d2817-45ee-4aee-b04c-88fa72c436d5",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Retrieve leads from Pipedrive for the email outreach process.\nUse this tool to identify leads that are available for outreach.",
+        "resource": "lead",
+        "operation": "getAll",
+        "filters": {
+          "archived_status": "not_archived"
+        }
+      },
+      "type": "n8n-nodes-base.pipedriveTool",
+      "typeVersion": 2,
+      "position": [368, 176],
+      "id": "fcb6fcc7-e111-46bb-a2a2-7f68bbb5c14a",
+      "name": "Get many leads in Pipedrive"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get the person associated with a Pipedrive lead using the person ID.\nUse this tool to retrieve the contact details needed for email outreach.",
+        "resource": "person",
+        "operation": "get",
+        "personId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Person_ID', `The person ID associated with the lead. Use the person_id returned by the Pipedrive lead.`, 'number') }}"
+      },
+      "type": "n8n-nodes-base.pipedriveTool",
+      "typeVersion": 2,
+      "position": [512, 176],
+      "id": "6ed447dd-1687-4486-864a-04e7ef3559d0",
+      "name": "Get a person in Pipedrive"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Create a personalized outreach email draft for the contact associated with the current lead.\nUse only the contact and company information provided by the workflow.\nDo not send the email.",
+        "resource": "draft",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', `The subject of the personalized outreach email.`, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `The body of the personalized outreach email.\nKeep it concise, professional, and personalized using only the available information.`, 'string') }}",
+        "options": {
+          "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To_Email', `The professional email address of the contact associated with the current lead.`, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [656, 176],
+      "id": "d04d122d-3c23-4b7b-a02d-909035438a45",
+      "name": "Create a draft in Gmail"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.6-luna",
+          "mode": "list",
+          "cachedResultName": "gpt-5.6-luna"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [-16, 192],
+      "id": "ba90187d-fc19-482f-ab54-69ecad667a23",
+      "name": "OpenAI Chat Model"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Email Outreach Sub-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Email Outreach Sub-Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many leads in Pipedrive": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Outreach Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a person in Pipedrive": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Outreach Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a draft in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Outreach Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Email Outreach Sub-Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
