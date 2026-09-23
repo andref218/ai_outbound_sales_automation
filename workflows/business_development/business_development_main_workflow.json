@@ -8,20 +8,20 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [-144, -16],
-      "id": "39094e28-c209-49c4-8421-3181450e8983",
+      "id": "f96be25c-eb6d-4136-9d64-1030f4b19e03",
       "name": "When chat message received"
     },
     {
       "parameters": {
         "options": {
-          "systemMessage": "You are the Business Development Manager of an AI-powered outbound sales system.\n\nYour role is to understand the user's sales objective and coordinate specialized agents to complete the task.\n\nAVAILABLE AGENTS\n\n1. Prospecting Sub-Agent\nUse this agent when the user asks to find, discover, research, or identify business prospects or companies based on specific criteria.\n\nPass the user's complete request to the Prospecting Sub-Agent, preserving all criteria.\n\n2. Qualification Sub-Agent\nUse this agent to evaluate the prospects returned by the Prospecting Sub-Agent.\n\nPass:\n- request: the original user request\n- prospects: the complete result returned by the Prospecting Sub-Agent\n\n3. RevOps Sub-Agent\nUse this agent after Qualification to register qualified prospects in Pipedrive.\n\nPass:\n- qualified_prospects: the complete result returned by the Qualification Sub-Agent\n\nWORKFLOW\n\nFor prospecting requests, follow this sequence strictly:\n\n1. Call the Prospecting Sub-Agent.\n2. Wait for its result.\n3. ALWAYS call the Qualification Sub-Agent exactly once.\n4. Pass the original user request as \"request\".\n5. Pass the complete Prospecting result as \"prospects\".\n6. Wait for the Qualification result.\n7. ALWAYS call the RevOps Sub-Agent exactly once.\n8. Pass the complete Qualification result as \"qualified_prospects\".\n9. Wait for the RevOps result.\n10. Only then produce the final response.\n\nIMPORTANT\n\n- Never skip Qualification or RevOps.\n- Never produce the final response before RevOps has completed.\n- Always qualify the returned prospects, even if they are incomplete or do not match the criteria.\n- Do not perform prospecting yourself when the Prospecting Sub-Agent is available.\n- Do not perform qualification yourself when the Qualification Sub-Agent is available.\n- Do not perform CRM operations yourself when the RevOps Sub-Agent is available.\n- Do not make unnecessary or repeated tool calls.\n- Do not invent, modify, or fabricate prospect information.\n- Preserve the user's original criteria throughout the process.\n- If information is missing, preserve it as missing.\n- Keep the final response concise.\n\nYour job is to coordinate the agents, not to perform their specialized tasks yourself.",
-          "maxIterations": 4
+          "systemMessage": "You are the Business Development Manager of an AI-powered outbound sales system.\n\nYour role is to understand the user's sales objective and coordinate specialized agents.\n\nAVAILABLE AGENTS\n\n1. Prospecting Sub-Agent\nUse this agent to find business prospects based on the user's criteria.\n\n2. Qualification Sub-Agent\nUse this agent to evaluate prospects against the original user request.\n\n3. RevOps Sub-Agent\nUse this agent to register qualified prospects in Pipedrive.\n\n4. Email Outreach Sub-Agent\nUse this agent to create personalized email drafts for qualified prospects.\n\nWORKFLOW\n\nFor prospecting requests, follow this order:\n\n1. Call the Prospecting Sub-Agent.\n2. Wait for its result.\n3. Call the Qualification Sub-Agent exactly once.\n4. Pass the original user request as \"request\".\n5. Pass the complete Prospecting result as \"prospects\".\n6. Wait for the Qualification result.\n7. Call the RevOps Sub-Agent exactly once.\n8. Pass the complete Qualification result as \"qualified_prospects\".\n9. Wait for the RevOps result.\n\nEMAIL OUTREACH\n\nOnly call the Email Outreach Sub-Agent when the user has explicitly provided:\n- the product or service being offered\n- the value proposition or message to communicate\n- the campaign objective\n\nIf any of this information is missing:\n- Do not call the Email Outreach Sub-Agent.\n- Do not invent or infer the missing information.\n- Ask the user naturally for the missing information.\n- Do not mention internal field names or workflow terminology.\n\nCONTINUATION\n\nIf the user provides the missing product/service, value proposition, or campaign objective after being asked for it, continue from the Email Outreach Sub-Agent.\n\nDo not repeat Prospecting, Qualification, or RevOps when those steps have already been completed for the current request.\n\nIf the required sales information is available:\n10. Call the Email Outreach Sub-Agent exactly once.\n11. Pass the complete RevOps result as \"crm_records\".\n12. Pass the original user request as \"request\".\n13. Pass the user's explicit product/service, value proposition, and campaign objective.\n14. Wait for the Email Outreach result.\n15. Only then produce the final response.\n\nRULES\n\n- Never skip Qualification or RevOps for a prospecting request.\n- Never call Email Outreach without sufficient sales information.\n- Never invent, modify, or fabricate data.\n- Preserve the user's original criteria.\n- Do not perform the specialized tasks yourself when the corresponding agent is available.\n- Do not make unnecessary or repeated tool calls.\n- When sales information is missing, ask only for the missing product/service, value proposition, and campaign objective.\n- Do not offer unrelated next steps.\n- Do not expose internal CRM IDs, workflow IDs, or other implementation details in the final response.\n- Keep the final response concise.",
+          "maxIterations": 6
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [64, -16],
-      "id": "e8a787b7-c5e3-4583-b188-80f83247d67f",
+      "id": "f5c1cede-354f-4280-851d-7ef862c8ba9a",
       "name": "Business Development Manager Main AI Agent"
     },
     {
@@ -39,7 +39,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [-64, 208],
-      "id": "1a69712a-5260-49bf-822b-aa4d6c275550",
+      "id": "54ab0d39-535c-404c-bb7c-3ed31fedb234",
       "name": "OpenAI Chat Model"
     },
     {
@@ -47,7 +47,7 @@
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.4,
       "position": [112, 208],
-      "id": "b3876a62-bfb4-4b17-b2bf-12e9d486de51",
+      "id": "d74b9916-075a-44f2-a8ac-3b1058f264e1",
       "name": "Simple Memory"
     },
     {
@@ -55,8 +55,9 @@
         "description": "MANDATORY second step after the Prospecting Sub-Agent.\n\nAlways call this tool once after receiving prospecting results.\n\nPass:\n- request: the original user request\n- prospects: the complete result returned by the Prospecting Sub-Agent\n\nDo not skip this step, even when prospects are incomplete or do not match the criteria.",
         "workflowId": {
           "__rl": true,
-          "value": "",
-          "mode": "list"
+          "value": "REPLACE_WITH_QUALIFICATION_SUB_AGENT_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Qualification Sub-Agent"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -94,7 +95,7 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [544, 192],
-      "id": "63bb837a-c397-4205-8e52-5cabc69a576b",
+      "id": "84f08fbd-3c1d-491c-a63a-6bb44379c65b",
       "name": "Call 'Qualification Sub-Agent'"
     },
     {
@@ -102,8 +103,9 @@
         "description": "Use this tool to find business prospects based on the user's original prospecting request.\n\nPass the complete user request, preserving all criteria such as company count, country, industry, location, business model, company size, target market, and any other requirements.",
         "workflowId": {
           "__rl": true,
-          "value": "",
-          "mode": "list"
+          "value": "REPLACE_WITH_PROSPECTING_SUB_AGENT_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Prospecting Sub-Agent"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -130,7 +132,7 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [384, 192],
-      "id": "321d76dc-f158-4dd4-9052-6b54ec7ebe51",
+      "id": "62cc9f2e-dca7-42e2-8fa0-99a546291657",
       "name": "Call 'Prospecting Sub-Agent'"
     },
     {
@@ -138,8 +140,9 @@
         "description": "MANDATORY third step after the Qualification Sub-Agent.\n\nAlways call this tool once after receiving the qualification results.\n\nPass the complete qualified prospects returned by the Qualification Sub-Agent as \"qualified_prospects\".\n\nDo not skip this step.",
         "workflowId": {
           "__rl": true,
-          "value": "",
-          "mode": "list"
+          "value": "REPLACE_WITH_REVOPS_SUB_AGENT_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "RevOps Sub-Agent"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -166,8 +169,67 @@
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "typeVersion": 2.2,
       "position": [704, 192],
-      "id": "27161e57-44c5-423e-8fe8-8b2de5a9098e",
+      "id": "fc4ac454-08cb-4834-a796-9ab4cbb8554c",
       "name": "Call 'RevOps Sub-Agent'"
+    },
+    {
+      "parameters": {
+        "description": "Only use this tool when the user has explicitly provided the product or service being offered, the value proposition or message to communicate, and the campaign objective.\n\nPass:\n- crm_records: the complete result returned by the RevOps Sub-Agent\n- request: the original user request\n- the user's explicit product/service, value proposition, and campaign objective\n\nDo not call this tool when the required sales information is missing.\nDo not invent or infer missing sales information.",
+        "workflowId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_EMAIL_OUTREACH_SUB_AGENT_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Email Outreach Sub-Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "crm_records": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('crm_records', `The complete result returned by the RevOps Sub-Agent. Pass the CRM records exactly as returned.`, 'string') }}",
+            "request": "={{ $json.chatInput }}",
+            "sales_context": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sales_context', `The user's explicit product, service, value proposition, or campaign objective. Do not infer or invent this information. Ask the user if it was not provided.`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "crm_records",
+              "displayName": "crm_records",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "request",
+              "displayName": "request",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sales_context",
+              "displayName": "sales_context",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [864, 192],
+      "id": "78142fb6-61d9-4069-a58a-6ecf9f1fb9c5",
+      "name": "Call 'Email Outreach Sub-Agent'"
     }
   ],
   "pinData": {},
@@ -228,6 +290,17 @@
       ]
     },
     "Call 'RevOps Sub-Agent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "Business Development Manager Main AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Email Outreach Sub-Agent'": {
       "ai_tool": [
         [
           {
