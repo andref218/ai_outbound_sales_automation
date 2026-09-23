@@ -1,0 +1,251 @@
+{
+  "name": "RevOps Sub-Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "qualified_prospects"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 400],
+      "id": "22ec8189-6e63-423b-832f-fdd21ed5b94c",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [112, 576],
+      "id": "3508fd7f-5a29-4821-9f6d-26bdbbcc2848",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"crm_records\": [\n    {\n      \"company_name\": \"\",\n      \"contact_name\": \"\",\n      \"job_title\": \"\",\n      \"email\": \"\",\n      \"website\": \"\",\n      \"qualification\": \"\",\n      \"score\": 0,\n      \"crm_action\": \"create\",\n      \"status\": \"new\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [544, 256],
+      "id": "d33ea453-54a2-4934-9d2b-44adf1f9fd8f",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Search Pipedrive for an existing organization by its exact company name before creating a new organization.",
+        "resource": "organization",
+        "operation": "search",
+        "term": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Term', ``, 'string') }}",
+        "exactMatch": true,
+        "limit": 1,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.pipedriveTool",
+      "typeVersion": 2,
+      "position": [448, 560],
+      "id": "bbab353a-c0a0-4719-bea9-47359beddec9",
+      "name": "Search organizations in Pipedrive"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Create a new organization in Pipedrive only when the organization does not already exist.\nUse the company name provided by the qualified prospect.",
+        "resource": "organization",
+        "name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Name', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.pipedriveTool",
+      "typeVersion": 2,
+      "position": [624, 560],
+      "id": "41724f1d-2e07-4595-9ba4-ccf9a918b07a",
+      "name": "Create an organization in Pipedrive"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Search Pipedrive for an existing person using the contact's email address before creating a new person.",
+        "resource": "person",
+        "operation": "search",
+        "term": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Term', `The contact's email address to search for in Pipedrive.`, 'string') }}",
+        "exactMatch": true,
+        "limit": 1,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.pipedriveTool",
+      "typeVersion": 2,
+      "position": [624, 720],
+      "id": "7ef7946c-74f8-4dba-8f5f-e800afd4439b",
+      "name": "Search persons in Pipedrive"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Create a new person in Pipedrive only when the contact does not already exist.\nUse the contact name, email, and organization information provided by the qualified prospect.",
+        "resource": "person",
+        "name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Name', ``, 'string') }}",
+        "additionalFields": {
+          "emails": {
+            "emailProperties": [
+              {
+                "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('emailProperties0_Email', `The professional email address of the contact.`, 'string') }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.pipedriveTool",
+      "typeVersion": 2,
+      "position": [448, 720],
+      "id": "63e96627-afa4-48ca-8538-8241e2ee5d0d",
+      "name": "Create a person in Pipedrive"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Create a new lead in Pipedrive for a qualified prospect.\nUse the prospect's company and contact information.\nOnly create the lead when it has not already been created.",
+        "resource": "lead",
+        "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', ``, 'string') }}",
+        "organization_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Organization_ID', ``, 'number') }}",
+        "additionalFields": {
+          "person_id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Person_ID', `The ID of the existing or newly created person in Pipedrive.`, 'number') }}"
+        }
+      },
+      "type": "n8n-nodes-base.pipedriveTool",
+      "typeVersion": 2,
+      "position": [800, 560],
+      "id": "f84e04de-af4a-4bfc-88d6-56b441600c2e",
+      "name": "Create a lead in Pipedrive"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Qualified prospects:\n{{ $json.qualified_prospects }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the RevOps Sub-Agent of an AI-powered outbound sales system.\n\nYour task is to register qualified prospects in Pipedrive.\n\nYou will receive a list of qualified prospects from the Qualification Sub-Agent.\n\nPROCESS\n\nFor each qualified prospect:\n\n1. Search Pipedrive for the organization using the exact company name.\n2. If the organization does not exist, create it.\n3. Search Pipedrive for the person using their email address.\n4. If the person does not exist, create them.\n5. Create a Lead associated with the organization and person.\n\nRULES\n\n- Only process prospects provided in the input.\n- Do not invent or modify prospect data.\n- Do not create duplicate organizations or people when an existing record is found.\n- Use the IDs returned by Pipedrive when associating records.\n- Only create a Lead for prospects that were successfully processed.\n- Preserve the original company and contact information.\n- If required information is missing, do not invent it.\n- Use Pipedrive tools for all CRM operations.\n- Do not perform prospecting or qualification yourself.\n\nReturn only the structured output.",
+          "maxIterations": 20
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [192, 400],
+      "id": "1e26763c-8a14-4d75-92cb-a1fa45d68264",
+      "name": "RevOps Sub-Agent"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "RevOps Sub-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "RevOps Sub-Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "RevOps Sub-Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search organizations in Pipedrive": {
+      "ai_tool": [
+        [
+          {
+            "node": "RevOps Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an organization in Pipedrive": {
+      "ai_tool": [
+        [
+          {
+            "node": "RevOps Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search persons in Pipedrive": {
+      "ai_tool": [
+        [
+          {
+            "node": "RevOps Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a person in Pipedrive": {
+      "ai_tool": [
+        [
+          {
+            "node": "RevOps Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a lead in Pipedrive": {
+      "ai_tool": [
+        [
+          {
+            "node": "RevOps Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
