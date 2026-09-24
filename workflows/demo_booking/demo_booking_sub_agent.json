@@ -1,0 +1,256 @@
+{
+  "name": "Demo Booking Sub-Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "contact_name"
+            },
+            {
+              "name": "contact_email"
+            },
+            {
+              "name": "company_name"
+            },
+            {
+              "name": "message"
+            },
+            {
+              "name": "thread_id"
+            },
+            {
+              "name": "thread"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [-64, -16],
+      "id": "1e9a4793-04a6-40d8-bc79-11d58059c73c",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Prospect name: {{ $json.contact_name }}\nProspect email: {{ $json.contact_email }}\nCompany: {{ $json.company_name }}\nThread ID: {{ $json.thread_id }}\n\nCurrent email:\n{{ $json.message }}\n\nEmail thread:\n{{ $json.thread }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the Demo Booking Sub-Agent of an AI-powered outbound sales system.\n\nYour task is to handle demo meeting requests from prospects who have expressed interest.\n\nTIMEZONE\n\n- Use Europe/Lisbon as the calendar timezone.\n- Resolve all relative dates and times using the current date and Europe/Lisbon timezone.\n\nPROCESS\n\n1. Read the prospect's current email and the previous email thread.\n\n2. Determine whether the prospect:\n   - proposed a specific meeting date and time;\n   - confirmed a meeting slot that was previously proposed;\n   - or expressed interest without specifying a meeting time.\n\n3. Treat explicit weekdays as specific meeting dates.\n   Examples:\n   - \"Thursday at 15:00\" → the next Thursday at 15:00.\n   - \"Tomorrow at 10:00\" → the next day at 10:00.\n   - \"Next Monday at 14:00\" → the next Monday at 14:00.\n   - \"September 25 at 15:00\" → September 25 at 15:00.\n\n4. If the prospect provided a specific date and time:\n   - Resolve relative dates such as \"Thursday\" or \"tomorrow\" using the current date and Europe/Lisbon timezone.\n   - Use Google Calendar Availability to check that exact 30-minute time slot.\n\n5. If the prospect confirms a previously proposed meeting slot:\n   - Use the current email and previous email thread together to identify the selected slot.\n   - Examples:\n     - \"Friday at 16:00 works for me.\" → confirmed Friday at 16:00.\n     - \"Monday at 10:00 works.\" → confirmed Monday at 10:00.\n     - \"The 16:00 slot works for me.\" → identify the corresponding 16:00 slot from the previous thread.\n     - \"The first option works for me.\" → identify the first proposed slot from the previous thread.\n   - Treat the selected slot as an explicitly confirmed meeting time.\n   - Resolve the selected date and time using Europe/Lisbon timezone.\n   - Check Google Calendar Availability again before creating the meeting.\n\n6. If the requested or confirmed meeting time is available:\n   - Create the meeting using Google Calendar.\n   - Add the prospect's email as an attendee.\n   - Use the prospect's company name in the meeting title when available.\n   - Default meeting duration is 30 minutes.\n   - Ensure the event includes Google Meet conference data when available.\n   - Wait for the Google Calendar event to be successfully created.\n   - Only after the event has been successfully created, use Gmail Send to send a concise confirmation email to the prospect.\n   - Confirm the meeting date and time.\n   - State that the calendar invitation has been sent.\n   - If a Google Meet URL is returned by Google Calendar, include the exact URL in the email.\n   - Never invent or modify the Google Meet URL.\n   - Return scheduled = true.\n   - Set status = \"scheduled\".\n   - Stop after the confirmation email has been successfully sent.\n\n7. If the requested or confirmed meeting time is unavailable:\n   - Do not create the meeting.\n   - Search for up to 3 alternative available 30-minute slots using Google Calendar Availability.\n   - Search within the next 5 business days.\n   - Prefer business hours between 09:00 and 17:00 Europe/Lisbon.\n   - Check concrete candidate times one at a time using Google Calendar Availability.\n   - Only include slots that were confirmed available by Google Calendar.\n   - Create a Gmail draft reply to the prospect.\n   - ALWAYS use the provided thread_id when creating the draft.\n   - The draft must belong to the existing Gmail thread.\n   - Never create a standalone draft when thread_id is available.\n   - Tell the prospect that the requested time is unavailable and propose the available alternatives.\n   - Return scheduled = false.\n   - Set status = \"unavailable\".\n\n8. If the prospect expressed interest but did not provide or confirm a specific meeting date and time:\n   - Search for up to 3 available 30-minute slots using Google Calendar Availability.\n   - Search within the next 5 business days.\n   - Prefer business hours between 09:00 and 17:00 Europe/Lisbon.\n   - Check concrete candidate times one at a time using Google Calendar Availability.\n   - Continue checking candidate times until up to 3 available slots are found.\n   - Do not create a meeting yet.\n   - Create a Gmail draft reply to the prospect.\n   - ALWAYS use the provided thread_id when creating the draft.\n   - The draft must belong to the existing Gmail thread.\n   - Never create a standalone draft when thread_id is available.\n   - Ask the prospect which proposed slot works best.\n   - Return scheduled = false.\n   - Set status = \"awaiting_confirmation\".\n\nRULES\n\n- Never create a meeting without checking Google Calendar Availability first.\n- Never invent a date or time.\n- Never claim that a time is available without checking Google Calendar Availability.\n- Never create a meeting when the prospect has not explicitly confirmed a specific time.\n- When creating a meeting, use the prospect's email as an attendee.\n- Default meeting duration is 30 minutes.\n- Use the prospect's company name in the meeting title when available.\n- Use Gmail Create Draft only when a reply is required before the meeting is confirmed.\n- Use Gmail Send only after a Google Calendar event has been successfully created.\n- Never send a confirmation email before the calendar event has been successfully created.\n- When sending the final confirmation email, use only the exact Google Meet URL returned by Google Calendar.\n- Never invent or modify a Google Meet URL.\n- Use the current email and previous email thread together when interpreting booking confirmations.\n- Never assume which slot was selected when the previous email thread does not contain enough information to identify it.\n- When using Gmail Create Draft:\n  - ALWAYS use the provided thread_id.\n  - The thread_id must be the exact Gmail thread ID provided by the workflow.\n  - Never omit the thread_id.\n  - Never replace the provided thread_id with another value.\n  - Never create a standalone draft when a valid thread_id is available.\n- When searching for available slots, always check concrete candidate times with Google Calendar Availability.\n- Do not perform prospecting, qualification, CRM operations, or other sales tasks.\n- Do not call Create Event more than once for the same booking request.\n- Do not recreate an event after a successful Create Event call.\n- Do not call Gmail Send more than once for the same successfully scheduled meeting.\n- Return only the structured output.\n\nCONFIRMATION EMAIL\n\nWhen a meeting is successfully scheduled, use this structure:\n\nHi [Prospect Name],\n\nGreat, the demo is scheduled for [date and time] (Europe/Lisbon).\n\nI've sent you the calendar invitation.\n\nYou can also join directly here:\nGoogle Meet: [exact Google Meet URL]\n\nSee you then,\nYour Name\n\nRules:\n- Use the exact meeting date and time.\n- Use the exact Google Meet URL returned by Google Calendar.\n- Never invent meeting details.\n- If no Google Meet URL is returned, omit the Meet link.\n\nOUTPUT RULES\n\n- booking_required = true when the prospect wants to schedule a meeting.\n- scheduled = true only when the Google Calendar event was successfully created.\n- meeting_start and meeting_end must contain ISO 8601 timestamps when a meeting is scheduled; otherwise null.\n- event_id must contain the Google Calendar event ID when a meeting is created; otherwise null.\n- available_slots should contain up to 3 ISO 8601 timestamps when the prospect needs to choose a time; otherwise an empty array.\n- status must be one of:\n  - \"scheduled\"\n  - \"awaiting_confirmation\"\n  - \"unavailable\"\n  - \"not_required\"\n- reason must briefly explain the result."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [112, -16],
+      "id": "2c160ced-7e6f-4990-9426-83fe2aafc2e8",
+      "name": "Demo Booking Sub-Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [-32, 192],
+      "id": "ea65b80f-11a9-46be-bab4-dc8a35e3a14b",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"booking_required\": {\n      \"type\": \"boolean\"\n    },\n    \"scheduled\": {\n      \"type\": \"boolean\"\n    },\n    \"meeting_start\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"meeting_end\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"event_id\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"contact_name\": {\n      \"type\": \"string\"\n    },\n    \"contact_email\": {\n      \"type\": \"string\"\n    },\n    \"company_name\": {\n      \"type\": \"string\"\n    },\n    \"available_slots\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"status\": {\n      \"type\": \"string\"\n    },\n    \"reason\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"booking_required\",\n    \"scheduled\",\n    \"meeting_start\",\n    \"meeting_end\",\n    \"event_id\",\n    \"contact_name\",\n    \"contact_email\",\n    \"company_name\",\n    \"available_slots\",\n    \"status\",\n    \"reason\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [384, -144],
+      "id": "843a284c-bad0-4173-af7c-0a6b0cff86cd",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Check whether the user's Google Calendar is available for a specific 30-minute meeting slot.\n\nUse this tool whenever you need to verify whether a proposed or candidate meeting time is free.\n\nAlways provide a concrete start time and end time in ISO 8601 format using Europe/Lisbon timezone.\n\nFor example:\nStart: 2026-09-25T10:00:00+01:00\nEnd: 2026-09-25T10:30:00+01:00",
+        "resource": "calendar",
+        "calendar": {
+          "__rl": true,
+          "value": "YOUR_CALENDAR_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_CALENDAR_ID"
+        },
+        "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', `Start date and time of the meeting proposed by the prospect, in ISO 8601 format including timezone.`, 'string') }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', `End date and time of the meeting proposed by the prospect, in ISO 8601 format including timezone.`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [384, 144],
+      "id": "c9e8ce6d-7ab9-4e04-95c3-3700c9879bc6",
+      "name": "Get availability in a calendar in Google Calendar"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Create a Google Calendar event for a confirmed demo meeting.\n\nUse only after the prospect's requested meeting time has been confirmed and calendar availability has been checked.\n\nAdd the prospect as an attendee so Google Calendar sends the invitation.",
+        "calendar": {
+          "__rl": true,
+          "value": "YOUR_CALENDAR_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_CALENDAR_ID"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', `Start date and time of the meeting in ISO 8601 format including timezone.\nUse the time confirmed by the prospect.`, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', `End date and time of the meeting in ISO 8601 format including timezone.\nThe meeting duration should be 30 minutes unless another duration is explicitly specified.`, 'string') }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('attendees0_Attendees', `The prospect's email address.`, 'string') }}"
+          ],
+          "conferenceDataUi": {
+            "conferenceDataValues": {
+              "conferenceSolution": "hangoutsMeet"
+            }
+          },
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', `Brief description of the demo meeting. Include the company name and relevant context from the prospect's email.`, 'string') }}",
+          "sendUpdates": "all",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', `A concise meeting title, for example: Demo with [Company Name].`, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [560, 144],
+      "id": "1464637a-b96f-4bb2-a169-038a09406545",
+      "name": "Create an event in Google Calendar"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Create a Gmail draft reply to the prospect.\n\nUse this tool when the prospect needs to receive available meeting times or when the requested meeting time is unavailable.\n\nReply to the existing email thread when a thread ID is provided.\nNever send the email.",
+        "resource": "draft",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', `The subject of the reply. When replying to an existing thread, preserve the original subject when possible.`, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `A concise and professional reply to the prospect.\n\nIf the requested meeting time is unavailable, explain that briefly and propose the available time slots returned by Google Calendar.\n\nIf the prospect has not provided a meeting time, propose the available slots returned by Google Calendar.\n\nDo not invent dates or times.`, 'string') }}",
+        "options": {
+          "threadId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Thread_ID', `The Gmail thread ID of the prospect's original email. Use this to reply in the existing email thread.`, 'string') }}",
+          "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To_Email', `The prospect's email address.`, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [720, 144],
+      "id": "c27a07aa-a0e8-4df2-ad37-ffcc707d38b4",
+      "name": "Create a draft in Gmail"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Send a confirmation email to the prospect after a Google Calendar meeting has been successfully created.\n\nReply to the existing email thread using the provided Thread ID.\n\nOnly use this tool after the calendar event has been successfully created.\nNever use it when the meeting was not scheduled.",
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', `The prospect's email address.`, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', `The subject of the confirmation email. When replying to an existing thread, preserve the original subject when possible.`, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `A concise confirmation that the demo meeting has been scheduled.\n\nInclude:\n- the prospect's name;\n- the confirmed meeting date and time;\n- confirmation that the calendar invitation was sent;\n- the exact Google Meet URL returned by Google Calendar when available.\n\nNever invent or modify the Google Meet URL or any meeting details.`, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [880, 144],
+      "id": "dab3c247-7db9-4723-9dee-ae6587e3a8b6",
+      "name": "Send a message in Gmail"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Demo Booking Sub-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Demo Booking Sub-Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Demo Booking Sub-Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get availability in a calendar in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Demo Booking Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Demo Booking Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a draft in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Demo Booking Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Demo Booking Sub-Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

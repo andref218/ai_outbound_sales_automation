@@ -14,8 +14,8 @@
       },
       "type": "n8n-nodes-base.pipedriveTool",
       "typeVersion": 2,
-      "position": [1136, 176],
-      "id": "585eb9ef-1a7d-4552-9a4c-dcb7c446e317",
+      "position": [1136, 224],
+      "id": "6c88735a-738b-4ab5-94d0-29714d2b7c4b",
       "name": "Search persons in Pipedrive"
     },
     {
@@ -25,8 +25,8 @@
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
-      "position": [1200, -144],
-      "id": "369030e6-80a3-40f3-b2cc-09adb733eac2",
+      "position": [1216, -176],
+      "id": "652c5129-87fe-4433-8561-041b7035fd7b",
       "name": "Structured Output Parser"
     },
     {
@@ -45,7 +45,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [768, 208],
-      "id": "9878baf5-545a-4fce-a037-4d73060336c6",
+      "id": "58c295fa-2984-4f69-8aad-199b4cb520fc",
       "name": "OpenAI Chat Model"
     },
     {
@@ -58,8 +58,8 @@
       },
       "type": "n8n-nodes-base.pipedrive",
       "typeVersion": 2,
-      "position": [1632, -208],
-      "id": "3d91a8b9-732a-41c7-b0f9-0256af886867",
+      "position": [1664, -208],
+      "id": "a3fe2f8f-a6db-47a0-b717-0ce78ce443ff",
       "name": "Create a deal"
     },
     {
@@ -75,8 +75,8 @@
       },
       "type": "n8n-nodes-base.pipedriveTool",
       "typeVersion": 2,
-      "position": [1296, 176],
-      "id": "e99dbea7-4521-429b-9381-e13edbb49ec5",
+      "position": [1296, 224],
+      "id": "daed0742-6d72-4a26-930a-347be68daf6d",
       "name": "Get many leads in Pipedrive"
     },
     {
@@ -90,8 +90,8 @@
       },
       "type": "n8n-nodes-base.pipedriveTool",
       "typeVersion": 2,
-      "position": [1440, 176],
-      "id": "4957029e-4d8e-4ded-ae4f-c178747be0ce",
+      "position": [1440, 224],
+      "id": "e18c3218-0f09-4874-8f82-5733581a72e1",
       "name": "Search deals in Pipedrive"
     },
     {
@@ -106,7 +106,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [912, 0],
-      "id": "2c975c1a-6012-4fcf-a36b-b4d22a3cccfc",
+      "id": "3b111c41-a17e-4bc0-b8a6-dcc715015f2b",
       "name": "Deal Recording Sub-Agent"
     },
     {
@@ -123,7 +123,7 @@
       "type": "n8n-nodes-base.gmailTrigger",
       "typeVersion": 1.4,
       "position": [-144, 0],
-      "id": "32989be5-b32d-4360-9a88-cc7576243ff6",
+      "id": "2da5091d-070f-462d-b2f9-960389d91df5",
       "name": "Incoming Email Trigger"
     },
     {
@@ -134,7 +134,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [32, 0],
-      "id": "1e79d464-6a07-43d6-adb6-17c3bf1c7768",
+      "id": "5c29e3b4-8efe-4e8e-b361-7ecb556ba8a7",
       "name": "Get Email Content"
     },
     {
@@ -146,7 +146,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [752, 0],
-      "id": "28dac952-f4ea-40ec-9bd5-540d7cb98d1c",
+      "id": "f32ace5f-a7a4-4896-9692-84f6c292ca7d",
       "name": "Normalize Email Data"
     },
     {
@@ -160,7 +160,7 @@
           },
           "conditions": [
             {
-              "id": "1b342474-7d76-48f9-bbce-3fc278a7f9f2",
+              "id": "329ba37e-9829-4f29-b22a-977ed72665ee",
               "leftValue": "={{ \n  $json.output.interested === true &&\n  $json.output.person_id != null &&\n  $json.output.lead_id != null &&\n  $json.output.existing_deal == null\n}}",
               "rightValue": true,
               "operator": {
@@ -177,7 +177,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [1408, -112],
-      "id": "49b00f98-5565-4b2b-8cb4-829e50cf22c4",
+      "id": "eb0aa969-6fa2-49ee-bdde-2f7f01700a88",
       "name": "If - Create a Deal ?"
     },
     {
@@ -190,7 +190,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [192, 0],
-      "id": "cfef39a9-42f4-4e45-be2d-6b28aed98652",
+      "id": "647db37e-cc74-4197-ab3e-17846cf9e30f",
       "name": "Get a thread"
     },
     {
@@ -205,7 +205,7 @@
       "type": "n8n-nodes-base.pipedrive",
       "typeVersion": 2,
       "position": [272, 224],
-      "id": "d3e17ab6-bd02-47b1-a252-356a0ded2e38",
+      "id": "903f1767-a900-479e-9d97-05dac39fa899",
       "name": "Find Contact in Pipedrive",
       "alwaysOutputData": true
     },
@@ -220,7 +220,7 @@
           },
           "conditions": [
             {
-              "id": "40eaffa3-be59-4a68-b94a-0004f2d59562",
+              "id": "20bdbb67-9558-4724-978d-e467a7ac9931",
               "leftValue": "={{ $json.messages.some(message =>\n  message.From?.toLowerCase().includes('YOUR_OUTBOUND_EMAIL@example.com')\n) }}",
               "rightValue": "",
               "operator": {
@@ -237,7 +237,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [368, 0],
-      "id": "c3d256e3-14ee-4450-bc4f-fec872374fec",
+      "id": "44a1f525-7236-4dbf-b0f4-124ff20bf82c",
       "name": "If - Is Outbound Thread?"
     },
     {
@@ -251,7 +251,7 @@
           },
           "conditions": [
             {
-              "id": "c69b75e6-9ce9-49e1-9ad1-856b1a0f01b7",
+              "id": "13b349c2-6e83-4dcb-a2d6-2ec31a606740",
               "leftValue": "={{ $json.id != null }}",
               "rightValue": "",
               "operator": {
@@ -268,8 +268,192 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [480, 224],
-      "id": "86a16f4a-5843-42c0-b594-b0d9f7dcc8c5",
+      "id": "a91b3ba0-67cc-4e4a-ad22-d3714a8a384b",
       "name": "If - Is Known Contact?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bd863ad7-5262-4c52-aa47-44ca261af440",
+              "leftValue": "={{ $json.output.interested }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1408, 32],
+      "id": "42f60cd9-20e0-4c3a-994a-a6e1e5eecf08",
+      "name": "If - Is interested ?"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "YOUR_DEMO_BOOKING_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/YOUR_DEMO_BOOKING_WORKFLOW_ID",
+          "cachedResultName": "Demo Booking Sub-Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "contact_name": "={{ $json.output.contact_name }}",
+            "contact_email": "={{ $('Normalize Email Data').item.json.sender_email }}",
+            "company_name": "={{ $json.output.company_name }}",
+            "message": "={{ $('Normalize Email Data').item.json.message }}",
+            "thread_id": "={{ $('Get a thread').item.json.threadId }}",
+            "thread": "={{ JSON.stringify($('Get a thread').item.json.messages) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "contact_name",
+              "displayName": "contact_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "e63b9a02-d489-40ac-bc82-ad8ab430c7a7",
+              "displayName": "contact_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "thread_id",
+              "displayName": "thread_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "thread",
+              "displayName": "thread",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [1664, -32],
+      "id": "e9a7407a-572a-4d21-9930-86b2048ec34a",
+      "name": "Call 'Demo Booking Sub-Agent'"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f19c8a0e-8e8d-4b69-ba4b-85a275b93a65",
+              "leftValue": "={{ $json.output.status }}",
+              "rightValue": "awaiting_confirmation",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "1ebd643a-41ab-4c5b-a72b-f8984a4554ce",
+              "leftValue": "={{ $json.output.status }}",
+              "rightValue": "unavailable",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1856, -32],
+      "id": "97bcbbb1-7d18-4231-a91f-751b104d097f",
+      "name": "If - Draft Created?"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "id"
+        },
+        "text": "=📝 *Demo booking draft created*\n\n*Prospect:* {{ $json.output.contact_name }}\n*Company:* {{ $json.output.company_name }}\n*Email:* {{ $json.output.contact_email }}\n\nThe prospect is interested and a Gmail draft was created with the available meeting times.\n\n*Available slots:*\n{{ $json.output.available_slots.join('\\n') }}\n\nPlease review and send the draft from Gmail.",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [2080, -128],
+      "id": "ba35603e-356f-4626-9d57-b7b17bdcf5fe",
+      "name": "Send a message"
     }
   ],
   "pinData": {},
@@ -334,6 +518,11 @@
         [
           {
             "node": "If - Create a Deal ?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If - Is interested ?",
             "type": "main",
             "index": 0
           }
@@ -429,6 +618,39 @@
         [
           {
             "node": "Normalize Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Is interested ?": {
+      "main": [
+        [
+          {
+            "node": "Call 'Demo Booking Sub-Agent'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Demo Booking Sub-Agent'": {
+      "main": [
+        [
+          {
+            "node": "If - Draft Created?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - Draft Created?": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
             "type": "main",
             "index": 0
           }
