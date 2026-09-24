@@ -14,19 +14,19 @@
       },
       "type": "n8n-nodes-base.pipedriveTool",
       "typeVersion": 2,
-      "position": [1136, 224],
-      "id": "6c88735a-738b-4ab5-94d0-29714d2b7c4b",
+      "position": [2080, 0],
+      "id": "f6a0c06c-ec70-40d9-8a53-05d1c8814ea8",
       "name": "Search persons in Pipedrive"
     },
     {
       "parameters": {
         "schemaType": "manual",
-        "inputSchema": "{\n  \"interested\": false,\n  \"person_id\": null,\n  \"lead_id\": null,\n  \"organization_id\": null,\n  \"existing_deal\": null,\n  \"company_name\": \"\",\n  \"contact_name\": \"\",\n  \"reason\": \"\",\n  \"status\": \"\"\n}"
+        "inputSchema": "{\n  \"person_id\": null,\n  \"lead_id\": null,\n  \"organization_id\": null,\n  \"existing_deal\": null,\n  \"company_name\": \"\",\n  \"contact_name\": \"\",\n  \"reason\": \"\",\n  \"status\": \"\"\n}"
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
-      "position": [1216, -176],
-      "id": "652c5129-87fe-4433-8561-041b7035fd7b",
+      "position": [2160, -416],
+      "id": "bdb18e8b-1489-42bf-b89b-84ca5572e04f",
       "name": "Structured Output Parser"
     },
     {
@@ -44,8 +44,8 @@
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
-      "position": [768, 208],
-      "id": "58c295fa-2984-4f69-8aad-199b4cb520fc",
+      "position": [1744, 32],
+      "id": "582547b3-0ca5-4fcb-a5be-d2c637604030",
       "name": "OpenAI Chat Model"
     },
     {
@@ -58,8 +58,8 @@
       },
       "type": "n8n-nodes-base.pipedrive",
       "typeVersion": 2,
-      "position": [1664, -208],
-      "id": "a3fe2f8f-a6db-47a0-b717-0ce78ce443ff",
+      "position": [2608, -448],
+      "id": "80b67efb-e29a-4973-819c-4d050706f2eb",
       "name": "Create a deal"
     },
     {
@@ -75,8 +75,8 @@
       },
       "type": "n8n-nodes-base.pipedriveTool",
       "typeVersion": 2,
-      "position": [1296, 224],
-      "id": "daed0742-6d72-4a26-930a-347be68daf6d",
+      "position": [2240, 0],
+      "id": "7e928550-3a3b-4167-90ba-450cd96400e5",
       "name": "Get many leads in Pipedrive"
     },
     {
@@ -90,8 +90,8 @@
       },
       "type": "n8n-nodes-base.pipedriveTool",
       "typeVersion": 2,
-      "position": [1440, 224],
-      "id": "e18c3218-0f09-4874-8f82-5733581a72e1",
+      "position": [2384, 0],
+      "id": "d5878840-8e8f-4d32-a963-08c28aecf699",
       "name": "Search deals in Pipedrive"
     },
     {
@@ -100,13 +100,13 @@
         "text": "=Incoming email:\n\nSender name: {{ $json.sender_name }}\nSender email: {{ $json.sender_email }}\nSubject: {{ $json.subject }}\nMessage: {{ $json.message }}",
         "hasOutputParser": true,
         "options": {
-          "systemMessage": "You are the Deal Recording Sub-Agent of an AI-powered outbound sales system.\n\nYour task is to analyze incoming email replies from prospects and determine whether the prospect has expressed genuine commercial interest. If there is interest, identify the corresponding records in Pipedrive and determine whether an existing deal already exists.\n\nPROCESS\n\n1. Analyze the incoming email.\n2. Determine whether the prospect has expressed clear commercial interest.\n\n3. If the prospect is not clearly interested:\n   - Return interested = false.\n   - Do not use Pipedrive tools.\n   - Return the structured output.\n\n4. If the prospect is clearly interested:\n   - MUST search Pipedrive for the person using the sender's email address.\n   - If a matching person is found, MUST use the returned person ID to search Pipedrive for the person's lead.\n   - If a matching lead is found:\n     - Preserve the person ID.\n     - Preserve the lead ID.\n     - Identify the associated organization from the Pipedrive data.\n     - Preserve the organization ID when available.\n     - Preserve the company name when available.\n     - MUST search Pipedrive for an existing deal using the associated company name.\n   - Do not stop after finding the person.\n   - Do not stop after finding the lead.\n   - The CRM lookup is complete only after the existing-deal search has been performed.\n   - Only then return the structured output.\n\nINTEREST RULES\n\nSet interested = true only when the prospect clearly expresses commercial interest or a concrete intention to move forward.\n\nExamples that indicate clear commercial interest:\n- \"Yes, I'm interested.\"\n- \"This sounds interesting. I'd like to discuss it.\"\n- \"I'd be interested in a demo.\"\n- \"Can we schedule a call?\"\n- \"I'd like to speak with someone about this.\"\n- \"Please send me a proposal.\"\n- \"I'd like to move forward.\"\n- \"I'm interested. Can your solution automate candidate screening?\"\n\nDo not mark interested = true based only on a question or request for information.\n\nThe following alone do NOT indicate sufficient commercial interest:\n- Asking how the product works.\n- Asking whether a specific feature is supported.\n- Asking about pricing.\n- Asking about integrations.\n- Asking for more information.\n- Asking whether the solution can solve a particular problem.\n- General curiosity about the product.\n\nExamples:\n- \"Can your solution also automate candidate screening workflows?\" → interested = false\n- \"How does your pricing work?\" → interested = false\n- \"Do you integrate with Workday?\" → interested = false\n- \"Can you tell me more about the product?\" → interested = false\n\nIf a message contains both a question and an explicit statement of interest, set interested = true.\n\nExamples:\n- \"I'm interested. Can your solution automate candidate screening?\" → interested = true\n- \"This sounds interesting. Can you send me more information?\" → interested = true\n\nTreat the following as not interested:\n- Clear rejection.\n- Unsubscribe requests.\n- Requests to stop contacting them.\n- Automatic replies.\n- Out-of-office messages.\n- Generic acknowledgements without commercial interest.\n\nPIPEDRIVE RULES\n\n- Always use the sender email address when searching for the person.\n- Prefer exact email matches.\n- Do not search for a person using unrelated or guessed information.\n- Only use IDs returned by Pipedrive tools.\n- Never invent person IDs, lead IDs, organization IDs, or deal IDs.\n- Preserve the organization ID and company name returned by Pipedrive whenever available.\n\nPERSON LOOKUP\n\n- If the person cannot be found:\n  - Set person_id = null.\n  - Set lead_id = null.\n  - Set organization_id = null.\n  - Set existing_deal = null.\n  - Set company_name = \"\".\n  - Explain in status that the person was not found.\n  - Do not continue with lead or deal lookup.\n\nLEAD LOOKUP\n\n- If the person is found but no lead is found:\n  - Preserve the person_id.\n  - Set lead_id = null.\n  - Set organization_id = null.\n  - Set existing_deal = null.\n  - Preserve company_name only when it is actually available.\n  - Explain in status that the lead was not found.\n  - Do not perform the deal search.\n\nORGANIZATION LOOKUP\n\n- If the lead is found, identify the organization associated with the lead or person.\n- Preserve the actual organization ID returned by Pipedrive.\n- Preserve the actual company name returned by Pipedrive.\n- Never invent or infer organization information.\n\nDEAL LOOKUP\n\n- If the lead is found, always perform the existing-deal search before returning the result.\n- Use the associated company name from Pipedrive for the deal search.\n- Never assume that a deal does not exist.\n- Only set existing_deal = null after the deal search has actually been performed and no matching deal was found.\n- If a deal is found, preserve its actual ID.\n- Do not create or modify deals yourself.\n\nDUPLICATE PROTECTION\n\n- Never create a deal if an existing deal was found.\n- Never assume an existing deal does not exist without performing the deal search.\n- The Create Deal node outside this agent is responsible for creating the deal.\n- This agent only analyzes the reply and performs CRM lookups.\n\nOTHER RULES\n\n- Do not perform prospecting, qualification, or email outreach.\n- Do not invent or modify any data.\n- Use null for IDs that could not be found.\n- Keep reason concise and factual.\n- Use status to clearly describe the CRM lookup result.\n- Return only the structured output."
+          "systemMessage": "You are the Deal Recording Sub-Agent of an AI-powered outbound sales system.\n\nYour task is to process prospects that have already been classified as commercially interested by the Inbound Email Router.\n\nYour responsibilities are:\n- identify the prospect in Pipedrive;\n- identify the associated lead;\n- identify the associated organization;\n- check whether an existing deal already exists.\n\nPROCESS\n\n1. Search Pipedrive for the person using the sender's exact email address.\n\n2. If a matching person is found:\n   - Preserve the person ID.\n   - Search for the person's lead using the returned person ID.\n\n3. If a matching lead is found:\n   - Preserve the lead ID.\n   - Identify the associated organization.\n   - Preserve the organization ID when available.\n   - Preserve the company name when available.\n   - Search Pipedrive for an existing deal using the associated company name.\n\n4. Only after the CRM lookup is complete, return the structured output.\n\nPERSON LOOKUP\n\n- Always use the sender email address when searching for the person.\n- Prefer exact email matches.\n- Do not search using unrelated or guessed information.\n- Only use IDs returned by Pipedrive.\n- Never invent person IDs, lead IDs, organization IDs, or deal IDs.\n\nIf the person cannot be found:\n- Set person_id = null.\n- Set lead_id = null.\n- Set organization_id = null.\n- Set existing_deal = null.\n- Set company_name = \"\".\n- Explain in status that the person was not found.\n- Do not continue with lead or deal lookup.\n\nLEAD LOOKUP\n\nIf the person is found but no lead is found:\n- Preserve the person_id.\n- Set lead_id = null.\n- Set organization_id = null.\n- Set existing_deal = null.\n- Preserve company_name only when actually available.\n- Explain in status that the lead was not found.\n- Do not perform the deal search.\n\nORGANIZATION LOOKUP\n\n- If the lead is found, identify the organization associated with the lead or person.\n- Preserve the actual organization ID returned by Pipedrive.\n- Preserve the actual company name returned by Pipedrive.\n- Never invent or infer organization information.\n\nDEAL LOOKUP\n\n- If the lead is found, always perform the existing-deal search before returning the result.\n- Use the associated company name from Pipedrive for the deal search.\n- Never assume that a deal does not exist.\n- Only set existing_deal = null after the deal search has actually been performed and no matching deal was found.\n- If a deal is found, preserve its actual ID.\n- Do not create or modify deals yourself.\n\nDUPLICATE PROTECTION\n\n- Never create a deal if an existing deal was found.\n- Never assume an existing deal does not exist without performing the deal search.\n- The Create Deal node outside this agent is responsible for creating the deal.\n- This agent only performs CRM lookups.\n\nOTHER RULES\n\n- Do not perform prospecting, qualification, or email outreach.\n- Do not invent or modify any data.\n- Use null for IDs that could not be found.\n- Keep status and reason concise and factual.\n- Return only the structured output."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
-      "position": [912, 0],
-      "id": "3b111c41-a17e-4bc0-b8a6-dcc715015f2b",
+      "position": [1856, -240],
+      "id": "bbd4f7e0-3166-49f4-897a-d98663373f16",
       "name": "Deal Recording Sub-Agent"
     },
     {
@@ -123,7 +123,7 @@
       "type": "n8n-nodes-base.gmailTrigger",
       "typeVersion": 1.4,
       "position": [-144, 0],
-      "id": "2da5091d-070f-462d-b2f9-960389d91df5",
+      "id": "db6b4abd-8b18-41b1-8f59-32f5229df7f0",
       "name": "Incoming Email Trigger"
     },
     {
@@ -134,7 +134,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [32, 0],
-      "id": "5c29e3b4-8efe-4e8e-b361-7ecb556ba8a7",
+      "id": "0e466fed-1a1d-441a-87e9-adb79b9bafd8",
       "name": "Get Email Content"
     },
     {
@@ -145,8 +145,8 @@
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
-      "position": [752, 0],
-      "id": "f32ace5f-a7a4-4896-9692-84f6c292ca7d",
+      "position": [672, 0],
+      "id": "d4b3eabf-d7fd-4f1a-8418-2efd223c7ccf",
       "name": "Normalize Email Data"
     },
     {
@@ -160,8 +160,8 @@
           },
           "conditions": [
             {
-              "id": "329ba37e-9829-4f29-b22a-977ed72665ee",
-              "leftValue": "={{ \n  $json.output.interested === true &&\n  $json.output.person_id != null &&\n  $json.output.lead_id != null &&\n  $json.output.existing_deal == null\n}}",
+              "id": "1b9e7ad4-da2e-4223-bae6-3ed8ce79c705",
+              "leftValue": "={{\n  $json.output.person_id != null &&\n  $json.output.lead_id != null &&\n  $json.output.existing_deal == null\n}}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -176,8 +176,8 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [1408, -112],
-      "id": "eb0aa969-6fa2-49ee-bdde-2f7f01700a88",
+      "position": [2352, -352],
+      "id": "86f4f91a-3768-4fec-8b75-e2e525d81f65",
       "name": "If - Create a Deal ?"
     },
     {
@@ -190,7 +190,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [192, 0],
-      "id": "647db37e-cc74-4197-ab3e-17846cf9e30f",
+      "id": "cc941ba5-4af2-4c40-9786-eb8541faa4be",
       "name": "Get a thread"
     },
     {
@@ -205,7 +205,7 @@
       "type": "n8n-nodes-base.pipedrive",
       "typeVersion": 2,
       "position": [272, 224],
-      "id": "903f1767-a900-479e-9d97-05dac39fa899",
+      "id": "8290efb3-d5f3-4f30-b151-20de2863c760",
       "name": "Find Contact in Pipedrive",
       "alwaysOutputData": true
     },
@@ -220,7 +220,7 @@
           },
           "conditions": [
             {
-              "id": "20bdbb67-9558-4724-978d-e467a7ac9931",
+              "id": "47859175-6672-449f-ba2f-6b67030f26b8",
               "leftValue": "={{ $json.messages.some(message =>\n  message.From?.toLowerCase().includes('YOUR_OUTBOUND_EMAIL@example.com')\n) }}",
               "rightValue": "",
               "operator": {
@@ -237,7 +237,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [368, 0],
-      "id": "44a1f525-7236-4dbf-b0f4-124ff20bf82c",
+      "id": "e25ff80a-8e29-4562-944d-1f2785654c0d",
       "name": "If - Is Outbound Thread?"
     },
     {
@@ -251,7 +251,7 @@
           },
           "conditions": [
             {
-              "id": "13b349c2-6e83-4dcb-a2d6-2ec31a606740",
+              "id": "1c705b86-6340-4efa-a024-e3279abf8e0a",
               "leftValue": "={{ $json.id != null }}",
               "rightValue": "",
               "operator": {
@@ -268,39 +268,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [480, 224],
-      "id": "a91b3ba0-67cc-4e4a-ad22-d3714a8a384b",
+      "id": "0b40908f-798e-4985-aa74-cdf88d29cb0e",
       "name": "If - Is Known Contact?"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "bd863ad7-5262-4c52-aa47-44ca261af440",
-              "leftValue": "={{ $json.output.interested }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [1408, 32],
-      "id": "42f60cd9-20e0-4c3a-994a-a6e1e5eecf08",
-      "name": "If - Is interested ?"
     },
     {
       "parameters": {
@@ -308,18 +277,17 @@
           "__rl": true,
           "value": "YOUR_DEMO_BOOKING_WORKFLOW_ID",
           "mode": "list",
-          "cachedResultUrl": "/workflow/YOUR_DEMO_BOOKING_WORKFLOW_ID",
           "cachedResultName": "Demo Booking Sub-Agent"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "contact_name": "={{ $json.output.contact_name }}",
-            "contact_email": "={{ $('Normalize Email Data').item.json.sender_email }}",
-            "company_name": "={{ $json.output.company_name }}",
-            "message": "={{ $('Normalize Email Data').item.json.message }}",
-            "thread_id": "={{ $('Get a thread').item.json.threadId }}",
-            "thread": "={{ JSON.stringify($('Get a thread').item.json.messages) }}"
+            "contact_name": "={{ $('Deal Recording Sub-Agent').first().json.output.contact_name }}",
+            "contact_email": "={{ $('Normalize Router Output').first().json.sender_email }}",
+            "company_name": "={{ $('Deal Recording Sub-Agent').first().json.output.company_name }}",
+            "message": "={{ $('Normalize Router Output').first().json.message }}",
+            "thread_id": "={{ $('Get a thread').first().json.threadId }}",
+            "thread": "={{ JSON.stringify($('Get a thread').first().json.messages) }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -334,7 +302,7 @@
               "removed": false
             },
             {
-              "id": "e63b9a02-d489-40ac-bc82-ad8ab430c7a7",
+              "id": "contact_email",
               "displayName": "contact_email",
               "required": false,
               "defaultMatch": false,
@@ -391,8 +359,8 @@
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
-      "position": [1664, -32],
-      "id": "e9a7407a-572a-4d21-9930-86b2048ec34a",
+      "position": [2784, -448],
+      "id": "36e66349-1f4c-45af-91d1-e7bef90757b8",
       "name": "Call 'Demo Booking Sub-Agent'"
     },
     {
@@ -406,7 +374,7 @@
           },
           "conditions": [
             {
-              "id": "f19c8a0e-8e8d-4b69-ba4b-85a275b93a65",
+              "id": "5a24aca0-fcf9-4499-920d-4d4f41c70baf",
               "leftValue": "={{ $json.output.status }}",
               "rightValue": "awaiting_confirmation",
               "operator": {
@@ -416,7 +384,7 @@
               }
             },
             {
-              "id": "1ebd643a-41ab-4c5b-a72b-f8984a4554ce",
+              "id": "e5aded51-0c54-44a4-baf6-f11e51676c13",
               "leftValue": "={{ $json.output.status }}",
               "rightValue": "unavailable",
               "operator": {
@@ -432,8 +400,8 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [1856, -32],
-      "id": "97bcbbb1-7d18-4231-a91f-751b104d097f",
+      "position": [2976, 80],
+      "id": "d7a4165f-8469-4d9c-b8bc-b8b4a0d9d6ad",
       "name": "If - Draft Created?"
     },
     {
@@ -444,16 +412,370 @@
           "value": "YOUR_SLACK_CHANNEL_ID",
           "mode": "id"
         },
-        "text": "=📝 *Demo booking draft created*\n\n*Prospect:* {{ $json.output.contact_name }}\n*Company:* {{ $json.output.company_name }}\n*Email:* {{ $json.output.contact_email }}\n\nThe prospect is interested and a Gmail draft was created with the available meeting times.\n\n*Available slots:*\n{{ $json.output.available_slots.join('\\n') }}\n\nPlease review and send the draft from Gmail.",
+        "text": "=📝 *Demo booking draft created*\n\n*Prospect:* {{ $json.output.contact_name }}\n*Company:* {{ $json.output.company_name }}\n*Email:* {{ $json.output.contact_email }}\n\nThe prospect is interested and a Gmail draft was created with the available meeting times.\n\n*Available slots:*\n{{ $json.output.available_slots.map(slot => '• ' + DateTime.fromISO(slot).setZone('Europe/Lisbon').toFormat(\"cccc, dd LLLL 'at' HH:mm\")).join('\\n') }}\n\nPlease review and send the draft from Gmail.",
         "otherOptions": {
           "includeLinkToWorkflow": false
         }
       },
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.7,
-      "position": [2080, -128],
-      "id": "ba35603e-356f-4626-9d57-b7b17bdcf5fe",
+      "position": [3216, 80],
+      "id": "544bd58e-7b3c-447b-acd1-a7863060cc6c",
       "name": "Send a message"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"classification\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"not_interested\",\n        \"new_interest\",\n        \"booking_follow_up\"\n      ]\n    }\n  },\n  \"required\": [\n    \"classification\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [1184, -176],
+      "id": "d4ea9a6b-d934-42da-9360-b0c9bb45c041",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [832, 224],
+      "id": "b67f1039-8e37-4528-95a3-56cf66c67c80",
+      "name": "OpenAI Chat Model1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Current email:\nSender name: {{ $json.sender_name }}\nSender email: {{ $json.sender_email }}\nSubject: {{ $json.subject }}\nMessage: {{ $json.message }}\n\nPrevious email thread:\n{{ JSON.stringify($json.messages) }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are the Inbound Email Router of an AI-powered outbound sales system.\n\nYour task is to classify an incoming prospect email and determine which workflow path should process it.\n\nCLASSIFICATIONS\n\nThe classification must be exactly one of:\n\n- \"not_interested\"\n- \"new_interest\"\n- \"booking_follow_up\"\n\nDEFINITIONS\n\nnot_interested:\nThe prospect clearly rejects the offer, asks to stop contact, sends an unsubscribe request, sends an automatic reply, or does not express commercial interest.\n\nnew_interest:\nThe prospect clearly expresses commercial interest in the offering and the conversation has not yet entered an active meeting-booking exchange.\n\nbooking_follow_up:\nThe email is part of an ongoing meeting-booking exchange.\n\nThis includes:\n- confirming a previously proposed meeting slot;\n- selecting one of previously proposed slots;\n- asking to change a previously proposed meeting time;\n- responding to available meeting options;\n- discussing the date or time of an ongoing demo scheduling conversation.\n\nCLASSIFICATION RULES\n\n- Use the current email and the previous email thread together.\n- Use the previous email thread to determine whether a meeting-booking exchange is already in progress.\n- A prospect expressing interest and proposing a meeting time for the first time is \"new_interest\".\n- A prospect selecting or confirming a meeting time that was already proposed in the previous thread is \"booking_follow_up\".\n- A prospect discussing or changing a previously proposed meeting time is \"booking_follow_up\".\n- A prospect who clearly rejects the offer or asks to stop contact is \"not_interested\".\n- Do not infer commercial interest from a generic question or acknowledgement alone.\n\nIMPORTANT\n\n- Do not use external tools.\n- Do not perform CRM operations.\n- Do not create or modify data.\n- Do not perform prospecting, qualification, outreach, or booking operations.\n\nOUTPUT\n\nReturn only the structured output.\n\nThe output must always contain exactly one field:\n\n\"classification\"\n\nThe value of \"classification\" must be exactly one of:\n\n- \"not_interested\"\n- \"new_interest\"\n- \"booking_follow_up\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [896, 0],
+      "id": "659e1f32-225f-4bb2-bd36-9a89540930b2",
+      "name": "Inbound Email Router Agent"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.classification }}",
+                    "rightValue": "not_interested",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c33d893a-963e-47d9-ad6e-c297c98edb33"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "57930ee1-c5df-426a-ac2b-65e0a1849d1e",
+                    "leftValue": "={{ $json.classification }}",
+                    "rightValue": "new_interest",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "87f91a48-7287-401a-a738-8e609dc348f1",
+                    "leftValue": "={{ $json.classification }}",
+                    "rightValue": "booking_follow_up",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [1424, -32],
+      "id": "573841b8-00a8-4b1c-87da-e4ca6f7308a4",
+      "name": "Inbound Email Routing"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "YOUR_DEMO_BOOKING_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Demo Booking Sub-Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "contact_name": "={{ $json.output.contact_name }}",
+            "contact_email": "={{ $('Normalize Email Data').item.json.sender_email }}",
+            "company_name": "={{ $json.output.company_name }}",
+            "message": "={{ $('Normalize Email Data').item.json.message }}",
+            "thread_id": "={{ $('Get a thread').item.json.threadId }}",
+            "thread": "={{ JSON.stringify($('Get a thread').item.json.messages) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "contact_name",
+              "displayName": "contact_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "contact_email",
+              "displayName": "contact_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "thread_id",
+              "displayName": "thread_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "thread",
+              "displayName": "thread",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [1744, 240],
+      "id": "947cd1f1-f142-4913-a7be-87696ba4d340",
+      "name": "Call 'Demo Booking Sub-Agent'2"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "YOUR_DEMO_BOOKING_WORKFLOW_ID",
+          "mode": "list",
+          "cachedResultName": "Demo Booking Sub-Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "contact_name": "={{ $('Normalize Router Output').first().json.sender_name }}",
+            "contact_email": "={{ $('Normalize Router Output').first().json.sender_email }}",
+            "company_name": "={{ $('Deal Recording Sub-Agent').first().json.output.company_name }}",
+            "message": "={{ $('Normalize Router Output').first().json.message }}",
+            "thread_id": "={{ $('Get a thread').first().json.messages[0].threadId }}",
+            "thread": "={{ JSON.stringify($('Get a thread').first().json.messages) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "contact_name",
+              "displayName": "contact_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "contact_email",
+              "displayName": "contact_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "thread_id",
+              "displayName": "thread_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "thread",
+              "displayName": "thread",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [2608, -240],
+      "id": "68a5be39-610b-43c2-ad0a-6ff45f7ddb72",
+      "name": "Call 'Demo Booking Sub-Agent'1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ee8453c0-ca3b-44b3-9809-18a4de1569b0",
+              "name": "classification",
+              "value": "={{ $json.output.classification }}",
+              "type": "string"
+            },
+            {
+              "id": "2bdc93e0-267c-4a5c-9f2d-401680e925e3",
+              "name": "sender_name",
+              "value": "={{ $('Normalize Email Data').item.json.sender_name }}",
+              "type": "string"
+            },
+            {
+              "id": "67610bd6-c362-4b43-82cb-e6c79bb17f39",
+              "name": "sender_email",
+              "value": "={{ $('Normalize Email Data').item.json.sender_email }}",
+              "type": "string"
+            },
+            {
+              "id": "1b741a53-0ba2-4767-9422-e894319769cb",
+              "name": "subject",
+              "value": "={{ $('Normalize Email Data').item.json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "6830ce27-d2a7-4f6d-a07c-52bbaad9a339",
+              "name": "message",
+              "value": "={{ $('Normalize Email Data').item.json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [1216, 0],
+      "id": "274a62fc-7bb9-48a4-b4bb-e03441cfcb97",
+      "name": "Normalize Router Output"
     }
   ],
   "pinData": {},
@@ -520,11 +842,6 @@
             "node": "If - Create a Deal ?",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "If - Is interested ?",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -555,7 +872,7 @@
       "main": [
         [
           {
-            "node": "Deal Recording Sub-Agent",
+            "node": "Inbound Email Router Agent",
             "type": "main",
             "index": 0
           }
@@ -567,6 +884,13 @@
         [
           {
             "node": "Create a deal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Demo Booking Sub-Agent'1",
             "type": "main",
             "index": 0
           }
@@ -624,17 +948,6 @@
         ]
       ]
     },
-    "If - Is interested ?": {
-      "main": [
-        [
-          {
-            "node": "Call 'Demo Booking Sub-Agent'",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Call 'Demo Booking Sub-Agent'": {
       "main": [
         [
@@ -651,6 +964,102 @@
         [
           {
             "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Inbound Email Router Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a deal": {
+      "main": [
+        [
+          {
+            "node": "Call 'Demo Booking Sub-Agent'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Inbound Email Router Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inbound Email Router Agent": {
+      "main": [
+        [
+          {
+            "node": "Normalize Router Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inbound Email Routing": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Deal Recording Sub-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Demo Booking Sub-Agent'2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Router Output": {
+      "main": [
+        [
+          {
+            "node": "Inbound Email Routing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Demo Booking Sub-Agent'2": {
+      "main": [
+        [
+          {
+            "node": "If - Draft Created?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Demo Booking Sub-Agent'1": {
+      "main": [
+        [
+          {
+            "node": "If - Draft Created?",
             "type": "main",
             "index": 0
           }
